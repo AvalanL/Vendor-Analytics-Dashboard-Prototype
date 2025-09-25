@@ -10,12 +10,15 @@ import { MetricsCards } from "@/components/vendor-analytics/metrics-cards"
 import { PerformanceTable } from "@/components/vendor-analytics/performance-table"
 import { RolesTable } from "@/components/vendor-analytics/roles-table"
 import { VendorTrendGraphs } from "@/components/vendor-analytics/vendor-trend-graphs"
+import { JobFamiliesTable } from "@/components/vendor-analytics/job-families-table"
+import { JobFamiliesPassRateGraph } from "@/components/vendor-analytics/job-families-pass-rate-graph"
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("Vendors")
   const [selectedPeriod, setSelectedPeriod] = useState("30days")
   const [selectedVendor, setSelectedVendor] = useState("All Vendors")
   const [selectedRole, setSelectedRole] = useState("All Roles")
+  const [selectedJobFamily, setSelectedJobFamily] = useState("All Job Families")
   const [searchQuery, setSearchQuery] = useState("")
 
   return (
@@ -34,6 +37,8 @@ export default function Home() {
               onVendorChange={setSelectedVendor}
               selectedRole={selectedRole}
               onRoleChange={setSelectedRole}
+              selectedJobFamily={selectedJobFamily}
+              onJobFamilyChange={setSelectedJobFamily}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
             />
@@ -41,6 +46,7 @@ export default function Home() {
               selectedPeriod={selectedPeriod}
               selectedVendor={selectedVendor}
               selectedRole={selectedRole}
+              selectedJobFamily={selectedJobFamily}
               activeTab={activeTab}
               searchQuery={searchQuery}
             />
@@ -48,6 +54,7 @@ export default function Home() {
               selectedPeriod={selectedPeriod}
               selectedVendor={selectedVendor}
               selectedRole={selectedRole}
+              selectedJobFamily={selectedJobFamily}
               activeTab={activeTab}
               searchQuery={searchQuery}
             />
@@ -66,15 +73,36 @@ export default function Home() {
                 selectedPeriod={selectedPeriod}
                 selectedVendor={selectedVendor}
                 selectedRole={selectedRole}
+                selectedJobFamily={selectedJobFamily}
                 searchQuery={searchQuery}
               />
-            ) : (
+            ) : activeTab === "Roles" ? (
               <RolesTable
                 selectedPeriod={selectedPeriod}
                 selectedVendor={selectedVendor}
                 selectedRole={selectedRole}
+                selectedJobFamily={selectedJobFamily}
                 searchQuery={searchQuery}
               />
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-6 mb-6">
+                  <JobFamiliesPassRateGraph
+                    selectedPeriod={selectedPeriod}
+                    selectedVendor={selectedVendor}
+                    selectedRole={selectedRole}
+                    selectedJobFamily={selectedJobFamily}
+                    searchQuery={searchQuery}
+                  />
+                </div>
+                <JobFamiliesTable
+                  selectedPeriod={selectedPeriod}
+                  selectedVendor={selectedVendor}
+                  selectedRole={selectedRole}
+                  selectedJobFamily={selectedJobFamily}
+                  searchQuery={searchQuery}
+                />
+              </>
             )}
 
           </main>

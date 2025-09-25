@@ -1,14 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState, useMemo } from "react"
 import Link from "next/link"
 import { InfoIcon, ChevronUp, ChevronDown } from "lucide-react"
-import { roles, jobFamilies } from "@/lib/dummy-data"
-import { filterRoles } from "@/lib/filter-utils"
+import { jobFamilies, roles, allVendors } from "@/lib/dummy-data"
+import { filterVendors } from "@/lib/filter-utils"
 
 type SortDirection = "asc" | "desc" | null
 type SortColumn =
-  | "role"
+  | "jobFamily"
   | "vendor"
   | "volume"
   | "passRate"
@@ -19,7 +19,7 @@ type SortColumn =
   | "interviewsPerPlacement"
   | null
 
-interface RolesTableProps {
+interface JobFamiliesTableProps {
   selectedPeriod: string
   selectedVendor: string
   selectedRole: string
@@ -27,26 +27,123 @@ interface RolesTableProps {
   searchQuery: string
 }
 
-export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selectedJobFamily, searchQuery }: RolesTableProps) {
+interface JobFamilyRow {
+  id: string
+  name: string
+  jobFamilyId: string
+  vendors: {
+    id: string
+    name: string
+    status: string
+    volume: number
+    passRate: number
+    passTotal: number
+    timeInProcess: number
+    timeAverage: string
+    noShows: number
+    noShowsTotal: number
+    integrityFlag: number
+    integrityTotal: number
+    placements: number
+    placementsTotal: number
+    interviewsPerPlacement: number
+    interviewsPercentage: number
+  }[]
+}
+
+export function JobFamiliesTable({ selectedPeriod, selectedVendor, selectedRole, selectedJobFamily, searchQuery }: JobFamiliesTableProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
 
-  // Filter roles based on selected filters
-  let filteredRoles = filterRoles(roles, selectedPeriod, selectedVendor, selectedRole, searchQuery)
-  
-  // Apply job family filter if selected
-  if (selectedJobFamily && selectedJobFamily !== "All Job Families") {
-    const selectedJF = jobFamilies.find(jf => jf.name === selectedJobFamily)
-    if (selectedJF) {
-      filteredRoles = filteredRoles.filter(role => role.jobFamilyId === selectedJF.id)
-    }
-  }
+  // Generate data from real data sources
+  const jobFamiliesData = useMemo(() => {
+    const data: JobFamilyRow[] = []
+    const activeVendors = allVendors.filter(v => v.status === "Active")
+    const scaledVendors = filterVendors(activeVendors, selectedPeriod)
+    
+    // Process each job family
+    jobFamilies.forEach(jf => {
+      // Get all roles in this job family
+      const familyRoles = roles.filter(role => role.jobFamilyId === jf.id)
+      
+      if (familyRoles.length === 0) return
+      
+      // Get unique vendors across all roles in this family
+      const vendorsInFamily = new Map<string, any>()
+      
+      familyRoles.forEach(role => {
+        role.vendors.forEach(vendor => {
+          if (!vendorsInFamily.has(vendor.id)) {
+            const scaledVendor = scaledVendors.find(v => v.id === vendor.id)
+            if (scaledVendor) {
+              vendorsInFamily.set(vendor.id, scaledVendor)
+            }
+          }
+        })
+      })
+      
+      // Convert map to array for the job family row
+      const vendorArray = Array.from(vendorsInFamily.values())
+      
+      if (vendorArray.length > 0) {
+        data.push({
+          id: jf.id,
+          name: jf.name,
+          jobFamilyId: jf.id,
+          vendors: vendorArray.sort((a, b) => b.volume - a.volume), // Sort by volume
+        })
+      }
+    })
+    
+    return data
+  }, [selectedPeriod])
 
-  // Helper function to get job family name by ID
-  const getJobFamilyName = (jobFamilyId: string) => {
-    const jobFamily = jobFamilies.find(jf => jf.id === jobFamilyId)
-    return jobFamily?.name || "Unknown"
-  }
+  // Filter data based on search query and selected filters
+  const filteredJobFamilies = useMemo(() => {
+    let filtered = jobFamiliesData
+    
+    // Filter by job family if specified
+    if (selectedJobFamily && selectedJobFamily !== "All Job Families") {
+      filtered = filtered.filter(jf => jf.name === selectedJobFamily)
+    }
+    
+    // Apply search filter if provided
+    if (searchQuery.trim() !== "") {
+      const query = searchQuery.toLowerCase().trim()
+      
+      filtered = filtered.filter((jf) => {
+        // Check if job family name matches search
+        if (jf.name.toLowerCase().includes(query)) {
+          return true
+        }
+        
+        // Check if any vendors in this job family match search
+        const hasMatchingVendor = jf.vendors.some((vendor) => 
+          vendor.name.toLowerCase().includes(query)
+        )
+        
+        return hasMatchingVendor
+      })
+      
+      // Also filter vendors within each job family
+      filtered = filtered.map((jf) => ({
+        ...jf,
+        vendors: jf.vendors.filter(
+          (vendor) => vendor.name.toLowerCase().includes(query) || jf.name.toLowerCase().includes(query),
+        ),
+      }))
+    }
+    
+    // Apply vendor filter
+    if (selectedVendor && selectedVendor !== "All Vendors") {
+      filtered = filtered.map((jf) => ({
+        ...jf,
+        vendors: jf.vendors.filter((vendor) => vendor.name === selectedVendor)
+      })).filter((jf) => jf.vendors.length > 0)
+    }
+    
+    return filtered
+  }, [jobFamiliesData, searchQuery, selectedVendor, selectedJobFamily])
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -92,7 +189,7 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
             lineHeight: "144%",
           }}
         >
-          Role Performance
+          Job Family Performance
         </h2>
       </div>
       <style jsx global>{`
@@ -189,7 +286,7 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
           line-height: 134%;
         }
         
-        .role-name {
+        .job-family-name {
           color: #1A1C1C;
           font-family: 'Work Sans', sans-serif;
           font-size: 16px;
@@ -199,7 +296,7 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
           margin-bottom: 4px;
         }
         
-        .role-location {
+        .job-family-location {
           color: #5C5E5E;
           font-family: 'Work Sans', sans-serif;
           font-size: 14px;
@@ -208,33 +305,33 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
           line-height: 134%;
         }
         
-        .roles-table {
+        .job-families-table {
           border: 1px solid #E2E8F0;
           border-radius: 0.5rem;
           background: #FFF;
           overflow: hidden;
         }
         
-        .roles-table-row {
+        .job-families-table-row {
           border-top: 1px solid #E2E8F0;
         }
         
-        .roles-table-row:first-child {
+        .job-families-table-row:first-child {
           border-top: none;
         }
         
-        .roles-table-header {
+        .job-families-table-header {
           border-bottom: 1px solid #E2E8F0;
           background: #F9F9F9;
         }
         
-        .roles-table-cell {
+        .job-families-table-cell {
           padding: 16px;
           vertical-align: top;
           white-space: nowrap;
         }
         
-        .roles-table-container {
+        .job-families-table-container {
           width: 100%;
           border-collapse: collapse;
         }
@@ -251,37 +348,29 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
         }
 
         @media (max-width: 768px) {
-          .roles-table-wrapper {
+          .job-families-table-wrapper {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
           }
         }
       `}</style>
-      <div className="roles-table">
-        <div className="roles-table-wrapper">
-          <table className="roles-table-container">
+      <div className="job-families-table">
+        <div className="job-families-table-wrapper">
+          <table className="job-families-table-container">
             <thead>
-              <tr className="roles-table-header">
+              <tr className="job-families-table-header">
                 <th
-                  className="roles-table-cell cursor-pointer column-header text-left"
-                  onClick={() => handleSort("role")}
-                  style={{ borderRight: "1px solid #E2E8F0" }}
-                >
-                  <div className="flex items-center">
-                    ROLE
-                    {renderSortIndicator("role")}
-                  </div>
-                </th>
-                <th
-                  className="roles-table-cell column-header text-left"
+                  className="job-families-table-cell cursor-pointer column-header text-left"
+                  onClick={() => handleSort("jobFamily")}
                   style={{ borderRight: "1px solid #E2E8F0" }}
                 >
                   <div className="flex items-center">
                     JOB FAMILY
+                    {renderSortIndicator("jobFamily")}
                   </div>
                 </th>
                 <th
-                  className="roles-table-cell cursor-pointer column-header text-left"
+                  className="job-families-table-cell cursor-pointer column-header text-left"
                   onClick={() => handleSort("vendor")}
                 >
                   <div className="flex items-center">
@@ -290,7 +379,7 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
                   </div>
                 </th>
                 <th
-                  className="roles-table-cell cursor-pointer column-header text-left"
+                  className="job-families-table-cell cursor-pointer column-header text-left"
                   onClick={() => handleSort("volume")}
                 >
                   <div className="flex items-center">
@@ -299,7 +388,7 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
                   </div>
                 </th>
                 <th
-                  className="roles-table-cell cursor-pointer column-header text-left"
+                  className="job-families-table-cell cursor-pointer column-header text-left"
                   onClick={() => handleSort("passRate")}
                 >
                   <div className="flex items-center">
@@ -311,7 +400,7 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
                   </div>
                 </th>
                 <th
-                  className="roles-table-cell cursor-pointer column-header text-left"
+                  className="job-families-table-cell cursor-pointer column-header text-left"
                   onClick={() => handleSort("timeInProcess")}
                 >
                   <div className="flex items-center">
@@ -323,7 +412,7 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
                   </div>
                 </th>
                 <th
-                  className="roles-table-cell cursor-pointer column-header text-left"
+                  className="job-families-table-cell cursor-pointer column-header text-left"
                   onClick={() => handleSort("lateCancels")}
                 >
                   <div className="flex items-center">
@@ -335,7 +424,7 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
                   </div>
                 </th>
                 <th
-                  className="roles-table-cell cursor-pointer column-header text-left"
+                  className="job-families-table-cell cursor-pointer column-header text-left"
                   onClick={() => handleSort("integrityChecks")}
                 >
                   <div className="flex items-center">
@@ -347,7 +436,7 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
                   </div>
                 </th>
                 <th
-                  className="roles-table-cell cursor-pointer column-header text-left"
+                  className="job-families-table-cell cursor-pointer column-header text-left"
                   onClick={() => handleSort("placements")}
                 >
                   <div className="flex items-center">
@@ -359,7 +448,7 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
                   </div>
                 </th>
                 <th
-                  className="roles-table-cell cursor-pointer column-header text-left"
+                  className="job-families-table-cell cursor-pointer column-header text-left"
                   onClick={() => handleSort("interviewsPerPlacement")}
                 >
                   <div className="flex items-center">
@@ -373,42 +462,28 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
               </tr>
             </thead>
             <tbody>
-              {filteredRoles.flatMap((role, roleIndex) =>
-                role.vendors.map((vendor, vendorIndex) => (
-                  <tr key={`${roleIndex}-${vendorIndex}`} className="roles-table-row">
-                    {/* Role column - only show for first vendor in each role with rowspan */}
+              {filteredJobFamilies.flatMap((jobFamily, jobFamilyIndex) =>
+                jobFamily.vendors.map((vendor, vendorIndex) => (
+                  <tr key={`${jobFamilyIndex}-${vendorIndex}`} className="job-families-table-row">
+                    {/* Job Family column - only show for first vendor in each job family with rowspan */}
                     {vendorIndex === 0 && (
                       <td
-                        className="roles-table-cell"
-                        rowSpan={role.vendors.length}
+                        className="job-families-table-cell"
+                        rowSpan={jobFamily.vendors.length}
                         style={{
                           borderRight: "1px solid #E2E8F0",
                           verticalAlign: "top",
                         }}
                       >
                         <div className="flex flex-col">
-                          <span className="role-name">{role.name}</span>
-                          <span className="role-location">{role.location}</span>
+                          <span className="job-family-name">{jobFamily.name}</span>
+                          <span className="job-family-location">{jobFamily.vendors.length} vendors</span>
                         </div>
-                      </td>
-                    )}
-                    
-                    {/* Job Family column - only show for first vendor in each role with rowspan */}
-                    {vendorIndex === 0 && (
-                      <td
-                        className="roles-table-cell"
-                        rowSpan={role.vendors.length}
-                        style={{
-                          borderRight: "1px solid #E2E8F0",
-                          verticalAlign: "top",
-                        }}
-                      >
-                        <span className="cell-content">{getJobFamilyName(role.jobFamilyId)}</span>
                       </td>
                     )}
 
                     {/* Vendor column */}
-                    <td className="roles-table-cell">
+                    <td className="job-families-table-cell">
                       <div className="flex flex-col">
                         <Link href="#" className="vendor-name hover:text-blue-700">
                           {vendor.name}
@@ -430,23 +505,23 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
                     </td>
 
                     {/* Volume column */}
-                    <td className="roles-table-cell">
+                    <td className="job-families-table-cell">
                       <div className="flex flex-col">
-                        <span className="cell-content">{vendor.volume}</span>
+                        <span className="cell-content">{vendor.volume.toLocaleString()}</span>
                         <span className="cell-subtext">candidates</span>
                       </div>
                     </td>
 
                     {/* Pass Rate column */}
-                    <td className="roles-table-cell">
+                    <td className="job-families-table-cell">
                       <div className="flex flex-col">
                         <span className="cell-content">{vendor.passRate}%</span>
-                        <span className="cell-subtext">{vendor.passTotal} total</span>
+                        <span className="cell-subtext">{vendor.passTotal.toLocaleString()} total</span>
                       </div>
                     </td>
 
                     {/* Time in Process column */}
-                    <td className="roles-table-cell">
+                    <td className="job-families-table-cell">
                       <div className="flex flex-col">
                         <span className="cell-content">{vendor.timeInProcess} days</span>
                         <span className="cell-subtext">{vendor.timeAverage}</span>
@@ -454,7 +529,7 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
                     </td>
 
                     {/* Late Cancels column */}
-                    <td className="roles-table-cell">
+                    <td className="job-families-table-cell">
                       <div className="flex flex-col">
                         <span className="cell-content">{vendor.noShows}%</span>
                         <span className="cell-subtext">{vendor.noShowsTotal} total</span>
@@ -462,7 +537,7 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
                     </td>
 
                     {/* Integrity Checks column */}
-                    <td className="roles-table-cell">
+                    <td className="job-families-table-cell">
                       <div className="flex flex-col">
                         <span className="cell-content">{vendor.integrityFlag}%</span>
                         <span className="cell-subtext">{vendor.integrityTotal} total</span>
@@ -470,7 +545,7 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
                     </td>
 
                     {/* Placements column */}
-                    <td className="roles-table-cell">
+                    <td className="job-families-table-cell">
                       <div className="flex flex-col">
                         <span className="cell-content">{vendor.placements}</span>
                         <span className="cell-subtext">{vendor.placementsTotal}%</span>
@@ -478,7 +553,7 @@ export function RolesTable({ selectedPeriod, selectedVendor, selectedRole, selec
                     </td>
 
                     {/* Interviews per Placement column */}
-                    <td className="roles-table-cell">
+                    <td className="job-families-table-cell">
                       <div className="flex flex-col">
                         <span className="cell-content">{vendor.interviewsPerPlacement}</span>
                         <span className="cell-subtext">{vendor.interviewsPercentage}%</span>

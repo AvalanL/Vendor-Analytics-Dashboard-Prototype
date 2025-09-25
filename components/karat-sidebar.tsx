@@ -1,5 +1,7 @@
 import type React from "react"
-import { BarChart3, FileText, Plus, ThumbsUp, TrendingUp, LayoutGrid, Settings } from "lucide-react"
+import { BarChart3, FileText, Plus, ThumbsUp, TrendingUp, LayoutGrid, Settings, Target, GraduationCap, Video, HelpCircle, ArrowLeft, Rocket } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 import {
   Sidebar,
@@ -17,15 +19,22 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
-export function KaratSidebar() {
+interface KaratSidebarProps {
+  activeSection?: string
+  onSectionChange?: (section: string) => void
+}
+
+export function KaratSidebar({ activeSection, onSectionChange }: KaratSidebarProps = {}) {
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
+  const pathname = usePathname()
+  const isTrainingPage = pathname === '/pts-training'
 
   return (
     <TooltipProvider>
       <Sidebar
         collapsible="icon"
-        className="border-none bg-white border-r border-[#e8e8e8]"
+        className="bg-white border-r border-[#e8e8e8]"
         style={
           {
             "--sidebar-width": "240px",
@@ -52,45 +61,127 @@ export function KaratSidebar() {
             </div>
           )}
 
-          {!isCollapsed ? (
-            <Button className="mt-6 w-full bg-[#5751F9] text-white hover:bg-[#4A45E8]" style={{fontFamily: '"Work Sans", sans-serif'}}>
-              <Plus className="mr-2 h-5 w-5" />
-              Invite Candidate
-            </Button>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button className="aspect-square h-10 w-10 bg-[#5751F9] p-0 text-white hover:bg-[#4A45E8]">
-                  <Plus className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Invite Candidate</TooltipContent>
-            </Tooltip>
+          {!isTrainingPage && (
+            !isCollapsed ? (
+              <Button className="mt-6 w-full bg-[#5751F9] text-white hover:bg-[#4A45E8]" style={{fontFamily: '"Work Sans", sans-serif'}}>
+                <Plus className="mr-2 h-5 w-5" />
+                Invite Candidate
+              </Button>
+            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button className="aspect-square h-10 w-10 bg-[#5751F9] p-0 text-white hover:bg-[#4A45E8]">
+                    <Plus className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Invite Candidate</TooltipContent>
+              </Tooltip>
+            )
           )}
         </SidebarHeader>
 
         <SidebarContent className={cn("py-4", isCollapsed ? "px-0" : "px-6")}>
           <SidebarMenu>
-            <MenuItem
-              icon={<LayoutGrid className="h-5 w-5" />}
-              label="Active Funnel"
-              isCollapsed={isCollapsed}
-              isActive={true}
-            />
+            {isTrainingPage ? (
+              // Training page menu items
+              <>
+                {!isCollapsed && (
+                  <div className="px-3 py-2">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Training Sections
+                    </h3>
+                  </div>
+                )}
+                
+                <MenuItem 
+                  icon={<Video className="h-5 w-5" />} 
+                  label="Internal Demo Training" 
+                  isCollapsed={isCollapsed}
+                  isActive={activeSection === 'Internal Demo Training'}
+                  onClick={() => onSectionChange?.('Internal Demo Training')}
+                />
 
-            <MenuItem icon={<TrendingUp className="h-5 w-5" />} label="Analytics" isCollapsed={isCollapsed} />
+                <MenuItem 
+                  icon={<HelpCircle className="h-5 w-5" />} 
+                  label="Customer FAQ" 
+                  isCollapsed={isCollapsed}
+                  isActive={activeSection === 'Customer FAQ'}
+                  onClick={() => onSectionChange?.('Customer FAQ')}
+                />
 
-            <MenuItem icon={<ThumbsUp className="h-5 w-5" />} label="Review Hub" isCollapsed={isCollapsed} />
+                <MenuItem 
+                  icon={<Rocket className="h-5 w-5" />} 
+                  label="Deployment Checklist" 
+                  isCollapsed={isCollapsed}
+                  isActive={activeSection === 'Deployment Checklist'}
+                  onClick={() => onSectionChange?.('Deployment Checklist')}
+                />
+              </>
+            ) : (
+              // Regular dashboard menu items
+              <>
+                <MenuItem
+                  icon={<LayoutGrid className="h-5 w-5" />}
+                  label="Active Funnel"
+                  isCollapsed={isCollapsed}
+                  isActive={pathname === '/'}
+                  href="/"
+                />
 
-            <MenuItem icon={<BarChart3 className="h-5 w-5" />} label="Interviews" isCollapsed={isCollapsed} />
+                <MenuItem 
+                  icon={<TrendingUp className="h-5 w-5" />} 
+                  label="Analytics" 
+                  isCollapsed={isCollapsed}
+                  href="/"
+                />
 
-            <MenuItem icon={<FileText className="h-5 w-5" />} label="Roles" isCollapsed={isCollapsed} />
+                <MenuItem 
+                  icon={<ThumbsUp className="h-5 w-5" />} 
+                  label="Review Hub" 
+                  isCollapsed={isCollapsed}
+                  href="/review-hub"
+                />
 
-            <MenuItem icon={<Settings className="h-5 w-5" />} label="Settings" isCollapsed={isCollapsed} />
+                <MenuItem 
+                  icon={<BarChart3 className="h-5 w-5" />} 
+                  label="Interviews" 
+                  isCollapsed={isCollapsed}
+                  href="/interviews"
+                />
+
+                <MenuItem 
+                  icon={<FileText className="h-5 w-5" />} 
+                  label="Roles" 
+                  isCollapsed={isCollapsed}
+                  href="/roles"
+                />
+
+                <MenuItem 
+                  icon={<Target className="h-5 w-5" />} 
+                  label="Sourcing Insights" 
+                  isCollapsed={isCollapsed}
+                  href="/sourcing-insights"
+                />
+
+                <MenuItem 
+                  icon={<GraduationCap className="h-5 w-5" />} 
+                  label="PTS Internal Training" 
+                  isCollapsed={isCollapsed}
+                  href="/pts-training"
+                />
+
+                <MenuItem 
+                  icon={<Settings className="h-5 w-5" />} 
+                  label="Settings" 
+                  isCollapsed={isCollapsed}
+                  href="/settings"
+                />
+              </>
+            )}
           </SidebarMenu>
         </SidebarContent>
 
-        {!isCollapsed && (
+        {!isCollapsed && !isTrainingPage && (
           <SidebarFooter className="px-6 pb-6">
             <div className="rounded-md border border-gray-200 p-4">
               <p className="mb-4 text-[#1A1C1C]" style={{fontFamily: '"Work Sans", sans-serif'}}>We'd love your feedback on Karat Portal!</p>
@@ -112,28 +203,43 @@ function MenuItem({
   label,
   isCollapsed,
   isActive = false,
+  href,
+  onClick,
 }: {
   icon: React.ReactNode
   label: string
   isCollapsed: boolean
   isActive?: boolean
+  href?: string
+  onClick?: () => void
 }) {
+  const content = (
+    <SidebarMenuButton
+      className={cn(
+        "text-[#1A1C1C] hover:bg-gray-50",
+        isCollapsed ? "flex h-10 w-10 justify-center p-0 mx-auto" : "w-full",
+        isActive && "bg-[#5751F9]/10 text-[#5751F9]",
+      )}
+      onClick={onClick}
+    >
+      <span className={cn("flex items-center", isCollapsed ? "justify-center" : "")}>
+        {icon}
+        {!isCollapsed && <span className="ml-3" style={{fontFamily: '"Work Sans", sans-serif'}}>{label}</span>}
+      </span>
+    </SidebarMenuButton>
+  )
+
   return (
     <SidebarMenuItem>
       <Tooltip>
         <TooltipTrigger asChild>
-          <SidebarMenuButton
-            className={cn(
-              "text-[#1A1C1C] hover:bg-gray-50",
-              isCollapsed ? "flex h-10 w-10 justify-center p-0 mx-auto" : "w-full",
-              isActive && "bg-[#5751F9]/10 text-[#5751F9]",
-            )}
-          >
-            <span className={cn("flex items-center", isCollapsed ? "justify-center" : "")}>
-              {icon}
-              {!isCollapsed && <span className="ml-3" style={{fontFamily: '"Work Sans", sans-serif'}}>{label}</span>}
-            </span>
-          </SidebarMenuButton>
+          {href ? (
+            <Link href={href}>
+              {content}
+            </Link>
+          ) : (
+            content
+          )}
         </TooltipTrigger>
         {isCollapsed && <TooltipContent side="right">{label}</TooltipContent>}
       </Tooltip>

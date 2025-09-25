@@ -72,11 +72,19 @@ export interface Vendor {
   rateCards?: RateCard[] // Associated rate cards
 }
 
+// Job Family data
+export interface JobFamily {
+  id: string
+  name: string
+  description?: string
+}
+
 // Role data
 export interface Role {
   id: string
   name: string
   location: string
+  jobFamilyId: string
   vendors: Vendor[]
 }
 
@@ -231,39 +239,51 @@ const vendors: Vendor[] = baseVendorsRaw.map(baseVendor => {
 // Helper function to get vendor by ID (accessing the final processed vendors array)
 const getVendor = (id: string): Vendor | undefined => vendors.find(v => v.id === id)
 
+// --- Job Families ---
+export const jobFamilies: JobFamily[] = [
+  { id: "jf1", name: "Frontend", description: "Frontend development including UI/UX implementation" },
+  { id: "jf2", name: "Backend", description: "Server-side development and API design" },
+  { id: "jf3", name: "Full Stack", description: "End-to-end development across frontend and backend" },
+  { id: "jf4", name: "Data", description: "Data science, analytics, and data engineering" },
+  { id: "jf5", name: "DevOps", description: "Infrastructure, deployment, and operations" },
+  { id: "jf6", name: "Mobile", description: "Mobile application development for iOS and Android" },
+  { id: "jf7", name: "AI/ML", description: "Artificial Intelligence and Machine Learning engineering" },
+  { id: "jf8", name: "Cloud", description: "Cloud architecture and cloud-native development" },
+]
+
 // --- Re-create role instances with potentially updated vendor references ---
 export const roles: Role[] = [
   // Senior Level Positions
-  { id: "r1", name: "Senior Backend Engineer", location: "United Kingdom", vendors: [getVendor("v1"), getVendor("v6"), getVendor("v10"), getVendor("v20")].filter(Boolean) as Vendor[] },
-  { id: "r2", name: "Senior Frontend Engineer", location: "United States", vendors: [getVendor("v5"), getVendor("v16"), getVendor("v20"), getVendor("v28")].filter(Boolean) as Vendor[] },
-  { id: "r3", name: "Senior Software Engineer", location: "Brazil", vendors: [getVendor("v6"), getVendor("v16"), getVendor("v21"), getVendor("v30")].filter(Boolean) as Vendor[] },
-  { id: "r4", name: "Senior Full Stack Engineer", location: "Germany", vendors: [getVendor("v8"), getVendor("v24"), getVendor("v27"), getVendor("v28")].filter(Boolean) as Vendor[] },
-  { id: "r5", name: "Senior DevOps Engineer", location: "United States", vendors: [getVendor("v5"), getVendor("v8"), getVendor("v16"), getVendor("v23")].filter(Boolean) as Vendor[] },
+  { id: "r1", name: "Senior Backend Engineer", location: "United Kingdom", jobFamilyId: "jf2", vendors: [getVendor("v1"), getVendor("v6"), getVendor("v10"), getVendor("v20")].filter(Boolean) as Vendor[] },
+  { id: "r2", name: "Senior Frontend Engineer", location: "United States", jobFamilyId: "jf1", vendors: [getVendor("v5"), getVendor("v16"), getVendor("v20"), getVendor("v28")].filter(Boolean) as Vendor[] },
+  { id: "r3", name: "Senior Software Engineer", location: "Brazil", jobFamilyId: "jf3", vendors: [getVendor("v6"), getVendor("v16"), getVendor("v21"), getVendor("v30")].filter(Boolean) as Vendor[] },
+  { id: "r4", name: "Senior Full Stack Engineer", location: "Germany", jobFamilyId: "jf3", vendors: [getVendor("v8"), getVendor("v24"), getVendor("v27"), getVendor("v28")].filter(Boolean) as Vendor[] },
+  { id: "r5", name: "Senior DevOps Engineer", location: "United States", jobFamilyId: "jf5", vendors: [getVendor("v5"), getVendor("v8"), getVendor("v16"), getVendor("v23")].filter(Boolean) as Vendor[] },
 
   // Staff/Principal Level Positions
-  { id: "r6", name: "Staff Software Engineer", location: "Singapore", vendors: [getVendor("v6"), getVendor("v9"), getVendor("v16"), getVendor("v28")].filter(Boolean) as Vendor[] },
-  { id: "r7", name: "Principal Software Engineer", location: "Australia", vendors: [getVendor("v8"), getVendor("v11"), getVendor("v20"), getVendor("v29")].filter(Boolean) as Vendor[] },
-  { id: "r8", name: "Staff Backend Engineer", location: "Canada", vendors: [getVendor("v1"), getVendor("v19"), getVendor("v25"), getVendor("v27")].filter(Boolean) as Vendor[] },
+  { id: "r6", name: "Staff Software Engineer", location: "Singapore", jobFamilyId: "jf3", vendors: [getVendor("v6"), getVendor("v9"), getVendor("v16"), getVendor("v28")].filter(Boolean) as Vendor[] },
+  { id: "r7", name: "Principal Software Engineer", location: "Australia", jobFamilyId: "jf3", vendors: [getVendor("v8"), getVendor("v11"), getVendor("v20"), getVendor("v29")].filter(Boolean) as Vendor[] },
+  { id: "r8", name: "Staff Backend Engineer", location: "Canada", jobFamilyId: "jf2", vendors: [getVendor("v1"), getVendor("v19"), getVendor("v25"), getVendor("v27")].filter(Boolean) as Vendor[] },
 
   // Mid-Level Positions
-  { id: "r9", name: "Mid-Level Software Engineer", location: "Poland", vendors: [getVendor("v13"), getVendor("v20"), getVendor("v27"), getVendor("v28")].filter(Boolean) as Vendor[] },
-  { id: "r10", name: "Mid-Level Frontend Engineer", location: "Netherlands", vendors: [getVendor("v10"), getVendor("v24"), getVendor("v27"), getVendor("v28")].filter(Boolean) as Vendor[] },
-  { id: "r11", name: "Mid-Level Backend Engineer", location: "Ukraine", vendors: [getVendor("v9"), getVendor("v27"), getVendor("v28"), getVendor("v29")].filter(Boolean) as Vendor[] },
-  { id: "r12", name: "Full Stack Engineer", location: "Argentina", vendors: [getVendor("v21"), getVendor("v30"), getVendor("v11"), getVendor("v25")].filter(Boolean) as Vendor[] },
+  { id: "r9", name: "Mid-Level Software Engineer", location: "Poland", jobFamilyId: "jf3", vendors: [getVendor("v13"), getVendor("v20"), getVendor("v27"), getVendor("v28")].filter(Boolean) as Vendor[] },
+  { id: "r10", name: "Mid-Level Frontend Engineer", location: "Netherlands", jobFamilyId: "jf1", vendors: [getVendor("v10"), getVendor("v24"), getVendor("v27"), getVendor("v28")].filter(Boolean) as Vendor[] },
+  { id: "r11", name: "Mid-Level Backend Engineer", location: "Ukraine", jobFamilyId: "jf2", vendors: [getVendor("v9"), getVendor("v27"), getVendor("v28"), getVendor("v29")].filter(Boolean) as Vendor[] },
+  { id: "r12", name: "Full Stack Engineer", location: "Argentina", jobFamilyId: "jf3", vendors: [getVendor("v21"), getVendor("v30"), getVendor("v11"), getVendor("v25")].filter(Boolean) as Vendor[] },
 
   // Junior Level Positions
-  { id: "r13", name: "Junior Software Engineer", location: "Canada", vendors: [getVendor("v2"), getVendor("v15"), getVendor("v19"), getVendor("v25")].filter(Boolean) as Vendor[] },
-  { id: "r14", name: "Junior Frontend Engineer", location: "India", vendors: [getVendor("v7"), getVendor("v12"), getVendor("v14"), getVendor("v22")].filter(Boolean) as Vendor[] },
-  { id: "r15", name: "Junior Backend Engineer", location: "Philippines", vendors: [getVendor("v14"), getVendor("v22"), getVendor("v26"), getVendor("v29")].filter(Boolean) as Vendor[] },
-  { id: "r16", name: "Entry Level Software Engineer", location: "Vietnam", vendors: [getVendor("v15"), getVendor("v22"), getVendor("v26"), getVendor("v3")].filter(Boolean) as Vendor[] },
+  { id: "r13", name: "Junior Software Engineer", location: "Canada", jobFamilyId: "jf3", vendors: [getVendor("v2"), getVendor("v15"), getVendor("v19"), getVendor("v25")].filter(Boolean) as Vendor[] },
+  { id: "r14", name: "Junior Frontend Engineer", location: "India", jobFamilyId: "jf1", vendors: [getVendor("v7"), getVendor("v12"), getVendor("v14"), getVendor("v22")].filter(Boolean) as Vendor[] },
+  { id: "r15", name: "Junior Backend Engineer", location: "Philippines", jobFamilyId: "jf2", vendors: [getVendor("v14"), getVendor("v22"), getVendor("v26"), getVendor("v29")].filter(Boolean) as Vendor[] },
+  { id: "r16", name: "Entry Level Software Engineer", location: "Vietnam", jobFamilyId: "jf3", vendors: [getVendor("v15"), getVendor("v22"), getVendor("v26"), getVendor("v3")].filter(Boolean) as Vendor[] },
 
   // Specialized Positions
-  { id: "r17", name: "DevOps Engineer", location: "Ireland", vendors: [getVendor("v5"), getVendor("v8"), getVendor("v10"), getVendor("v19")].filter(Boolean) as Vendor[] },
-  { id: "r18", name: "Data Scientist", location: "Germany", vendors: [getVendor("v9"), getVendor("v19"), getVendor("v24"), getVendor("v27")].filter(Boolean) as Vendor[] },
-  { id: "r19", name: "Machine Learning Engineer", location: "France", vendors: [getVendor("v6"), getVendor("v10"), getVendor("v16"), getVendor("v24")].filter(Boolean) as Vendor[] },
-  { id: "r20", name: "Site Reliability Engineer", location: "Sweden", vendors: [getVendor("v5"), getVendor("v8"), getVendor("v27"), getVendor("v28")].filter(Boolean) as Vendor[] },
-  { id: "r21", name: "Mobile App Developer", location: "Spain", vendors: [getVendor("v21"), getVendor("v24"), getVendor("v28"), getVendor("v30")].filter(Boolean) as Vendor[] },
-  { id: "r22", name: "Cloud Engineer", location: "Japan", vendors: [getVendor("v9"), getVendor("v11"), getVendor("v13"), getVendor("v29")].filter(Boolean) as Vendor[] },
+  { id: "r17", name: "DevOps Engineer", location: "Ireland", jobFamilyId: "jf5", vendors: [getVendor("v5"), getVendor("v8"), getVendor("v10"), getVendor("v19")].filter(Boolean) as Vendor[] },
+  { id: "r18", name: "Data Scientist", location: "Germany", jobFamilyId: "jf4", vendors: [getVendor("v9"), getVendor("v19"), getVendor("v24"), getVendor("v27")].filter(Boolean) as Vendor[] },
+  { id: "r19", name: "Machine Learning Engineer", location: "France", jobFamilyId: "jf7", vendors: [getVendor("v6"), getVendor("v10"), getVendor("v16"), getVendor("v24")].filter(Boolean) as Vendor[] },
+  { id: "r20", name: "Site Reliability Engineer", location: "Sweden", jobFamilyId: "jf5", vendors: [getVendor("v5"), getVendor("v8"), getVendor("v27"), getVendor("v28")].filter(Boolean) as Vendor[] },
+  { id: "r21", name: "Mobile App Developer", location: "Spain", jobFamilyId: "jf6", vendors: [getVendor("v21"), getVendor("v24"), getVendor("v28"), getVendor("v30")].filter(Boolean) as Vendor[] },
+  { id: "r22", name: "Cloud Engineer", location: "Japan", jobFamilyId: "jf8", vendors: [getVendor("v9"), getVendor("v11"), getVendor("v13"), getVendor("v29")].filter(Boolean) as Vendor[] },
 ]
 
 // Export all vendors (the processed array)
