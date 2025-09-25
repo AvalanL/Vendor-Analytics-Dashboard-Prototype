@@ -124,15 +124,15 @@ export function KaratSidebar({ activeSection, onSectionChange }: KaratSidebarPro
                   icon={<LayoutGrid className="h-5 w-5" />}
                   label="Active Funnel"
                   isCollapsed={isCollapsed}
-                  isActive={pathname === '/'}
-                  href="/"
+                  isActive={pathname === '/vendor-analytics'}
+                  href="/vendor-analytics"
                 />
 
                 <MenuItem 
                   icon={<TrendingUp className="h-5 w-5" />} 
                   label="Analytics" 
                   isCollapsed={isCollapsed}
-                  href="/"
+                  href="/vendor-analytics"
                 />
 
                 <MenuItem 
