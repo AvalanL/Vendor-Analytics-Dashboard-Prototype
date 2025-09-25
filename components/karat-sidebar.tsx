@@ -1,7 +1,8 @@
 import type React from "react"
-import { BarChart3, FileText, Plus, ThumbsUp, TrendingUp, LayoutGrid, Settings, Target, GraduationCap, Video, HelpCircle, ArrowLeft, Rocket } from "lucide-react"
+import { BarChart3, FileText, Plus, ThumbsUp, TrendingUp, LayoutGrid, Settings, Target, GraduationCap, Video, HelpCircle, ArrowLeft, Rocket, LogOut } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 
 import {
   Sidebar,
@@ -29,6 +30,7 @@ export function KaratSidebar({ activeSection, onSectionChange }: KaratSidebarPro
   const isCollapsed = state === "collapsed"
   const pathname = usePathname()
   const isTrainingPage = pathname === '/pts-training'
+  const { logout } = useAuth()
 
   return (
     <TooltipProvider>
@@ -175,6 +177,16 @@ export function KaratSidebar({ activeSection, onSectionChange }: KaratSidebarPro
                   label="Settings" 
                   isCollapsed={isCollapsed}
                   href="/settings"
+                />
+
+                <MenuItem 
+                  icon={<LogOut className="h-5 w-5" />} 
+                  label="Logout" 
+                  isCollapsed={isCollapsed}
+                  onClick={() => {
+                    logout()
+                    window.location.reload()
+                  }}
                 />
               </>
             )}
