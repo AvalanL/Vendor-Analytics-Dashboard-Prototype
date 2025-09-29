@@ -1,5 +1,5 @@
 import type React from "react"
-import { BarChart3, FileText, Plus, ThumbsUp, TrendingUp, LayoutGrid, Settings, Target, GraduationCap, Video, HelpCircle, ArrowLeft, Rocket, LogOut } from "lucide-react"
+import { BarChart3, FileText, Plus, ThumbsUp, TrendingUp, LayoutGrid, Settings, Target, GraduationCap, Video, HelpCircle, ArrowLeft, LogOut } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
@@ -103,20 +103,12 @@ export function KaratSidebar({ activeSection, onSectionChange }: KaratSidebarPro
                   onClick={() => onSectionChange?.('Internal Demo Training')}
                 />
 
-                <MenuItem 
-                  icon={<HelpCircle className="h-5 w-5" />} 
-                  label="Customer FAQ" 
+                <MenuItem
+                  icon={<HelpCircle className="h-5 w-5" />}
+                  label="Customer FAQ"
                   isCollapsed={isCollapsed}
                   isActive={activeSection === 'Customer FAQ'}
                   onClick={() => onSectionChange?.('Customer FAQ')}
-                />
-
-                <MenuItem 
-                  icon={<Rocket className="h-5 w-5" />} 
-                  label="Deployment Checklist" 
-                  isCollapsed={isCollapsed}
-                  isActive={activeSection === 'Deployment Checklist'}
-                  onClick={() => onSectionChange?.('Deployment Checklist')}
                 />
               </>
             ) : (
