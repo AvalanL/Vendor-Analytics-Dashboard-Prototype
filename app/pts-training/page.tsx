@@ -1,13 +1,45 @@
 'use client'
 
-import { useState } from 'react'
+import { Fragment, useMemo, useState, useRef, useEffect, useCallback } from 'react'
 import { KaratSidebar } from '@/components/karat-sidebar'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Play, Clock, Video, HelpCircle, CheckCircle, Rocket, Calendar, Users, Settings, FileText, AlertTriangle, Target } from 'lucide-react'
+import { Play, Clock, Video, HelpCircle, CheckCircle, X, FileText, MessageSquare, Monitor, ExternalLink, Plus } from 'lucide-react'
+import Link from 'next/link'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs'
 import { PTSTrainingHeader } from '@/components/vendor-analytics/pts-training-header'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import {
+  Table,
+  TableCaption,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table'
 
 
 interface TrainingVideo {
@@ -31,87 +63,170 @@ interface FAQItem {
   tags: string[]
 }
 
-interface DeploymentTask {
+interface DeploymentChecklistItem {
   id: string
-  title: string
-  description: string
-  phase: 'Pre-Sales' | 'Contract & Setup' | 'Technical Integration' | 'Content Development' | 'Testing & QA' | 'Go-Live' | 'Post-Launch'
-  owner: 'Sales' | 'Customer Success' | 'Engineering' | 'Content' | 'Client' | 'Shared'
-  estimatedDays: number
-  dependencies?: string[]
-  critical: boolean
-  status: 'pending' | 'in-progress' | 'completed' | 'blocked'
+  phase: string
+  item: string
+  owner: string
+  deliverable: string
+  status: 'Not Started' | 'In Progress' | 'Complete'
 }
 
 // Training videos data
 const trainingVideos: TrainingVideo[] = [
   {
+    id: 'pts-demo-client-side',
+    title: 'PTS Demo - Client Side',
+    description: 'Complete walkthrough of the Partner Talent Solutions system from the client perspective',
+    duration: 'TBD',
+    category: 'Demo Execution',
+    difficulty: 'Beginner',
+    thumbnail: '/api/placeholder/320/180',
+    videoUrl: '/videos/PTS demo - client side.mov',
+    completed: false
+  },
+  {
+    id: 'pts-demo-vendor-side',
+    title: 'PTS Demo - Vendor Side',
+    description: 'Complete walkthrough of the Partner Talent Solutions system from the vendor perspective',
+    duration: 'TBD',
+    category: 'Demo Execution',
+    difficulty: 'Beginner',
+    thumbnail: '/api/placeholder/320/180',
+    videoUrl: '/videos/PTS demo - Vendor side.mov',
+    completed: false
+  },
+  {
+    id: 'pts-deployment-training',
+    title: 'PTS Deployment Team Training',
+    description: 'Implementation team knowledge transfer covering PTS setup, client demos, vendor management, and ongoing support',
+    duration: 'TBD',
+    category: 'Implementation',
+    difficulty: 'Advanced',
+    thumbnail: '/api/placeholder/320/180',
+    videoUrl: '/videos/PTS Internal Training with Deployment.mp4',
+    completed: false
+  }
+]
+
+// Client Demo Summary Data
+const clientDemoSummary = {
+  title: "PTS Client-Side Demo Guide",
+  overview: "This guide covers how to effectively demonstrate Partner Talent Solutions (PTS) from the client perspective, including setup, navigation, and key talking points for prospect meetings.",
+  keyPoints: [
+    "PTS connects client organizations with vendor partners through a centralized analytics platform",
+    "Demo uses Diamondly (client) and Avarian (vendor) as example organizations",
+    "Vendor Analytics Dashboard provides real-time insights into partner performance",
+    "Data helps clients make informed budget allocation and vendor relationship decisions"
+  ],
+  demoEnvironments: {
+    production: {
+      name: "Diamondly on Central",
+      pros: ["Stable environment", "No risk of changes during demo"],
+      cons: ["Demo data has known issues (blank job families, NA values)", "Limited storyline capability"],
+      recommendation: "Use only if staging is unavailable"
+    },
+    staging: {
+      name: "PTS Demo on Staging",
+      pros: ["Better data quality", "Complete storylines", "Realistic vendor performance patterns"],
+      cons: ["Risk of environment changes", "Contains obfuscated client data"],
+      recommendation: "Preferred for demos until production data is fixed"
+    }
+  }
+}
+
+// Client Demo FAQ data extracted from internal training
+const clientDemoFAQ: FAQItem[] = [
+  {
+    id: 'demo-access-001',
+    question: 'How do I access the demo environment for client presentations?',
+    answer: 'There are two ways: 1) Log in directly as a user in the Diamondly organization, or 2) Access as a Central admin and navigate to Organizations > Diamondly > Vendors. The second method is often easier and doesn\'t require separate login credentials.',
+    category: 'Technical',
+    tags: ['demo access', 'login', 'diamondly', 'central']
+  },
+  {
     id: 'demo-setup-001',
-    title: 'PTS Demo Environment Setup',
-    description: 'Learn how to set up the demo environment, configure test data, and prepare for client presentations',
-    duration: '12:30',
-    category: 'Demo Setup',
-    difficulty: 'Beginner',
-    thumbnail: '/api/placeholder/320/180',
-    videoUrl: '#',
-    completed: true,
-    lastWatched: '2024-03-15'
+    question: 'Should I show the vendor setup process during client demos?',
+    answer: 'No, avoid showing vendor setup during client-facing demos. This is an internal administrative process that happens behind the scenes. Instead, focus on the end result - show how the analytics dashboard provides insights once vendors are already configured. Clients care about the value and insights, not the setup mechanics.',
+    category: 'Features',
+    tags: ['vendor setup', 'client demo', 'focus areas']
   },
   {
-    id: 'demo-setup-002',
-    title: 'Customizing Demo Data for Client Context',
-    description: 'How to tailor demo data to match client industry, role types, and specific use cases',
-    duration: '8:45',
-    category: 'Demo Setup',
-    difficulty: 'Intermediate',
-    thumbnail: '/api/placeholder/320/180',
-    videoUrl: '#',
-    completed: false
+    id: 'demo-data-001',
+    question: 'What timeline should I use for the demo to show meaningful data?',
+    answer: 'Default to 1 year for demos. This provides enough data volume to show interesting patterns and statistically significant sample sizes. Avoid shorter timeframes unless specifically requested, as they may not provide enough context for meaningful insights.',
+    category: 'Features',
+    tags: ['timeline', 'data volume', 'sample size']
   },
   {
-    id: 'demo-exec-001',
-    title: 'Opening the Demo - First Impressions',
-    description: 'Master the first 5 minutes: introductions, context setting, and capturing attention',
-    duration: '15:20',
-    category: 'Demo Execution',
-    difficulty: 'Beginner',
-    thumbnail: '/api/placeholder/320/180',
-    videoUrl: '#',
-    completed: true,
-    lastWatched: '2024-03-14'
+    id: 'demo-story-001',
+    question: 'What\'s the key storyline for the Vendor Analytics Dashboard?',
+    answer: 'Focus on "not all vendors are created equal" - some excel in specific job families while struggling in others. Use real examples: show how Vendor A might have 89% pass rate in Data but 11% in Backend, while Vendor B is the opposite. This demonstrates how clients can optimize budget allocation based on actual performance data rather than anecdotes.',
+    category: 'Features',
+    tags: ['vendor analytics', 'performance comparison', 'budget allocation']
   },
   {
-    id: 'demo-exec-002',
-    title: 'Navigating the Skill Gap Analysis',
-    description: 'How to explain technical failure patterns and sourcing recommendations to non-technical audiences',
-    duration: '18:15',
-    category: 'Demo Execution',
-    difficulty: 'Intermediate',
-    thumbnail: '/api/placeholder/320/180',
-    videoUrl: '#',
-    completed: false
+    id: 'demo-metrics-001',
+    question: 'What are the key metrics to highlight in the dashboard?',
+    answer: 'Focus on: 1) Candidates Above Bar (adjusted for integrity flags), 2) Pass rates by job family, 3) Volume metrics, 4) Integrity flag percentages, 5) Placement data (where available). Explain that "Above Bar" means candidates who passed AND had no integrity flags - giving clients confidence in quality.',
+    category: 'Features',
+    tags: ['metrics', 'above bar', 'integrity flags', 'pass rates']
   },
   {
-    id: 'demo-exec-003',
-    title: 'Handling Objections During Demos',
-    description: 'Common client objections and how to address them while maintaining demo flow',
-    duration: '22:10',
-    category: 'Demo Execution',
-    difficulty: 'Advanced',
-    thumbnail: '/api/placeholder/320/180',
-    videoUrl: '#',
-    completed: false
+    id: 'demo-navigation-001',
+    question: 'How should I navigate between the different dashboard tabs?',
+    answer: 'Start with Overview (vendor-centric view), then move to Job Families (role-type-centric view). Avoid the Roles tab as it will be replaced by Archetypes. Emphasize that all views are dynamic - selections in filters instantly update all data on the page.',
+    category: 'Features',
+    tags: ['navigation', 'dashboard tabs', 'dynamic filtering']
   },
   {
-    id: 'advanced-001',
-    title: 'Advanced Analytics Deep Dive',
-    description: 'Technical deep dive into role-specific insights and industry benchmarking features',
-    duration: '25:30',
-    category: 'Advanced Features',
-    difficulty: 'Advanced',
-    thumbnail: '/api/placeholder/320/180',
-    videoUrl: '#',
-    completed: false
+    id: 'demo-filtering-001',
+    question: 'How do I demonstrate the filtering and analysis capabilities?',
+    answer: 'Show multi-select functionality - select 2-3 vendors and specific job families to demonstrate how the data updates dynamically. Highlight the expandable vendor cards showing job family breakdowns, and demonstrate the export functionality for further analysis. Always mention that everything is searchable and customizable.',
+    category: 'Features',
+    tags: ['filtering', 'multi-select', 'export', 'analysis']
+  },
+  {
+    id: 'demo-issues-001',
+    question: 'How do I avoid showing data issues like N/A values or blank job families during demos?',
+    answer: 'NEVER demo with visible data issues - this destroys credibility. Always pre-screen your demo environment and identify vendors with clean data. Use staging environment when possible as it has better data quality. Have 2-3 "safe" vendors pre-selected that show clear, compelling stories. If you accidentally encounter bad data, immediately navigate away and focus on your prepared examples.',
+    category: 'Technical',
+    tags: ['data quality', 'demo preparation', 'credibility']
+  },
+  {
+    id: 'demo-value-001',
+    question: 'How do I articulate the business value during the demo?',
+    answer: 'Emphasize moving from anecdotal vendor management to data-driven decisions. Highlight: "You\'re spending millions on talent partners but don\'t know who\'s performing. PTS gives you real-time access to compare apples-to-apples performance, helping you optimize budget allocation and improve vendor relationships based on actual results."',
+    category: 'Features',
+    tags: ['business value', 'roi', 'data-driven decisions']
+  },
+  {
+    id: 'demo-client-invite-001',
+    question: 'Should I show the client invite functionality?',
+    answer: 'Yes, briefly demonstrate that clients can still invite candidates directly and attribute them to specific vendors using the vendor dropdown in the invite flow. This shows flexibility - vendors can invite directly OR clients can invite on behalf of vendors, with all data properly attributed.',
+    category: 'Features',
+    tags: ['client invites', 'vendor attribution', 'invite flow']
+  },
+  {
+    id: 'demo-sample-size-001',
+    question: 'How do I handle questions about small sample sizes in the data?',
+    answer: 'Always call attention to sample sizes - if a vendor shows 100% pass rate but only has 2 candidates, mention that larger sample sizes provide more reliable insights. Use this to demonstrate why the 1-year timeline is valuable and why clients need consistent data over time to make decisions.',
+    category: 'Features',
+    tags: ['sample size', 'data reliability', 'statistical significance']
+  },
+  {
+    id: 'demo-preparation-001',
+    question: 'How should I prepare before a client demo?',
+    answer: 'Always prepare thoroughly: 1) Log in 30 minutes before and identify 2-3 vendors with clean, compelling data, 2) Test your narrative flow with specific examples, 3) Verify no N/A values or blank job families are visible, 4) Have your key talking points ready, 5) Prepare for common objections. Never wing a demo - preparation is everything for credibility.',
+    category: 'Technical',
+    tags: ['demo preparation', 'best practices', 'planning']
+  },
+  {
+    id: 'demo-future-001',
+    question: 'What features are coming soon that I should mention?',
+    answer: 'Mention that rate card integration is in development, which will allow clients to see cost-effectiveness alongside performance metrics. Also note the transition from "Roles" to "Archetypes" for better job classification. The Trends timeline view is being polished and will provide historical performance tracking.',
+    category: 'Features',
+    tags: ['roadmap', 'rate cards', 'archetypes', 'trends']
   }
 ]
 
@@ -243,384 +358,847 @@ const faqItems: FAQItem[] = [
 ]
 
 // Deployment checklist data
-const deploymentTasks: DeploymentTask[] = [
-  // Pre-Sales Phase
+const deploymentChecklist: DeploymentChecklistItem[] = [
   {
-    id: 'pre-001',
-    title: 'Initial Discovery Call',
-    description: 'Conduct discovery call to understand client needs, current process, and technical requirements',
-    phase: 'Pre-Sales',
-    owner: 'Sales',
-    estimatedDays: 1,
-    critical: true,
-    status: 'pending'
+    id: 'step0-1',
+    phase: 'Step 0 - Pre-Requisites',
+    item: 'Confirm commercial plan (paid vs. trial)',
+    owner: 'GTM Lead',
+    deliverable: 'Contract/MSA signed',
+    status: 'Not Started'
   },
   {
-    id: 'pre-002',
-    title: 'Technical Architecture Review',
-    description: 'Review client technical architecture, existing tools, and integration requirements',
-    phase: 'Pre-Sales',
-    owner: 'Engineering',
-    estimatedDays: 2,
-    dependencies: ['pre-001'],
-    critical: true,
-    status: 'pending'
+    id: 'step0-2',
+    phase: 'Step 0 - Pre-Requisites',
+    item: 'Provision client account in Karat',
+    owner: 'Deployment Ops',
+    deliverable: 'Tenant live with baseline roles',
+    status: 'Not Started'
   },
   {
-    id: 'pre-003',
-    title: 'Vendor Partner Identification',
-    description: 'Identify all vendor partners that will need PTS access and their requirements',
-    phase: 'Pre-Sales',
-    owner: 'Client',
-    estimatedDays: 3,
-    critical: true,
-    status: 'pending'
+    id: 'step0-3',
+    phase: 'Step 0 - Pre-Requisites',
+    item: 'Align GTM, Deployment, and Product on scope',
+    owner: 'Exec Sponsor',
+    deliverable: 'Shared timeline and responsibilities',
+    status: 'Not Started'
   },
   {
-    id: 'pre-004',
-    title: 'ROI & Success Metrics Definition',
-    description: 'Define success metrics, KPIs, and expected ROI for the PTS implementation',
-    phase: 'Pre-Sales',
-    owner: 'Shared',
-    estimatedDays: 2,
-    critical: false,
-    status: 'pending'
-  },
-
-  // Contract & Setup Phase
-  {
-    id: 'contract-001',
-    title: 'Contract Execution',
-    description: 'Execute master service agreement and statement of work for PTS implementation',
-    phase: 'Contract & Setup',
-    owner: 'Sales',
-    estimatedDays: 5,
-    dependencies: ['pre-002', 'pre-003'],
-    critical: true,
-    status: 'pending'
+    id: 'step1-1',
+    phase: 'Step 1 - Pre-Sell & Buy-In',
+    item: 'Run client discovery on vendor pain points',
+    owner: 'GTM Lead',
+    deliverable: 'Discovery brief captured',
+    status: 'Not Started'
   },
   {
-    id: 'contract-002',
-    title: 'Client Organization Setup',
-    description: 'Create client organization in Karat platform with appropriate permissions and settings',
-    phase: 'Contract & Setup',
-    owner: 'Engineering',
-    estimatedDays: 1,
-    dependencies: ['contract-001'],
-    critical: true,
-    status: 'pending'
+    id: 'step1-2',
+    phase: 'Step 1 - Pre-Sell & Buy-In',
+    item: 'Deliver executive value demo',
+    owner: 'GTM Lead',
+    deliverable: 'Executive buy-in secured',
+    status: 'Not Started'
   },
   {
-    id: 'contract-003',
-    title: 'Vendor Partner Organization Setup',
-    description: 'Create vendor partner organizations and establish data relationships',
-    phase: 'Contract & Setup',
-    owner: 'Engineering',
-    estimatedDays: 2,
-    dependencies: ['contract-002'],
-    critical: true,
-    status: 'pending'
+    id: 'step1-3',
+    phase: 'Step 1 - Pre-Sell & Buy-In',
+    item: 'Deliver operator product demo',
+    owner: 'Product Specialist',
+    deliverable: 'Operators aligned on PTS flow',
+    status: 'Not Started'
   },
   {
-    id: 'contract-004',
-    title: 'Project Kickoff Meeting',
-    description: 'Conduct project kickoff with all stakeholders including timeline and responsibilities',
-    phase: 'Contract & Setup',
-    owner: 'Customer Success',
-    estimatedDays: 1,
-    dependencies: ['contract-001'],
-    critical: true,
-    status: 'pending'
-  },
-
-  // Technical Integration Phase
-  {
-    id: 'tech-001',
-    title: 'API Integration Setup',
-    description: 'Configure API endpoints and authentication for client systems integration',
-    phase: 'Technical Integration',
-    owner: 'Engineering',
-    estimatedDays: 3,
-    dependencies: ['contract-002'],
-    critical: true,
-    status: 'pending'
+    id: 'step1-4',
+    phase: 'Step 1 - Pre-Sell & Buy-In',
+    item: 'Secure client approval to proceed',
+    owner: 'GTM Lead',
+    deliverable: 'Move-forward decision captured',
+    status: 'Not Started'
   },
   {
-    id: 'tech-002',
-    title: 'Single Sign-On (SSO) Configuration',
-    description: 'Set up SSO integration with client identity provider if required',
-    phase: 'Technical Integration',
-    owner: 'Engineering',
-    estimatedDays: 5,
-    dependencies: ['tech-001'],
-    critical: false,
-    status: 'pending'
+    id: 'step2-1',
+    phase: 'Step 2 - Identify Preferred Vendors',
+    item: 'Identify top preferred vendors with client',
+    owner: 'Client Sponsor',
+    deliverable: 'Wave-1 vendor list defined',
+    status: 'Not Started'
   },
   {
-    id: 'tech-003',
-    title: 'Data Pipeline Configuration',
-    description: 'Configure data pipelines for candidate flow and results reporting',
-    phase: 'Technical Integration',
-    owner: 'Engineering',
-    estimatedDays: 4,
-    dependencies: ['tech-001'],
-    critical: true,
-    status: 'pending'
+    id: 'step2-2',
+    phase: 'Step 2 - Identify Preferred Vendors',
+    item: 'Confirm vendors cover majority submission volume',
+    owner: 'Client Sponsor',
+    deliverable: 'Volume coverage documented',
+    status: 'Not Started'
   },
   {
-    id: 'tech-004',
-    title: 'Webhook & Notification Setup',
-    description: 'Configure webhooks and notification systems for real-time updates',
-    phase: 'Technical Integration',
-    owner: 'Engineering',
-    estimatedDays: 2,
-    dependencies: ['tech-003'],
-    critical: false,
-    status: 'pending'
+    id: 'step3-1',
+    phase: 'Step 3 - Joint Kickoff',
+    item: 'Schedule joint kickoff for each vendor',
+    owner: 'Client Sponsor',
+    deliverable: 'Invites sent to client, Karat, vendor',
+    status: 'Not Started'
   },
   {
-    id: 'tech-005',
-    title: 'Historical Data Migration',
-    description: 'Migrate historical candidate data if requested (optional)',
-    phase: 'Technical Integration',
-    owner: 'Engineering',
-    estimatedDays: 7,
-    dependencies: ['tech-003'],
-    critical: false,
-    status: 'pending'
-  },
-
-  // Content Development Phase
-  {
-    id: 'content-001',
-    title: 'Role Definition Workshop',
-    description: 'Conduct workshops with client engineering leaders to define role requirements',
-    phase: 'Content Development',
-    owner: 'Content',
-    estimatedDays: 3,
-    dependencies: ['contract-004'],
-    critical: true,
-    status: 'pending'
+    id: 'step3-2',
+    phase: 'Step 3 - Joint Kickoff',
+    item: 'Present value proposition and product flow',
+    owner: 'Deployment Lead',
+    deliverable: 'Kickoff deck delivered',
+    status: 'Not Started'
   },
   {
-    id: 'content-002',
-    title: 'Assessment Content Creation',
-    description: 'Create customized assessment content for each defined role',
-    phase: 'Content Development',
-    owner: 'Content',
-    estimatedDays: 10,
-    dependencies: ['content-001'],
-    critical: true,
-    status: 'pending'
+    id: 'step3-3',
+    phase: 'Step 3 - Joint Kickoff',
+    item: 'Confirm authorized roles and requisitions',
+    owner: 'Deployment Lead',
+    deliverable: 'Role authorization list confirmed',
+    status: 'Not Started'
   },
   {
-    id: 'content-003',
-    title: 'Scoring Rubric Calibration',
-    description: 'Calibrate scoring rubrics and pass/fail thresholds with client team',
-    phase: 'Content Development',
-    owner: 'Content',
-    estimatedDays: 5,
-    dependencies: ['content-002'],
-    critical: true,
-    status: 'pending'
+    id: 'step3-4',
+    phase: 'Step 3 - Joint Kickoff',
+    item: 'Align timeline for invites, submissions, and product demo',
+    owner: 'Deployment Lead',
+    deliverable: 'Timeline agreed with stakeholders',
+    status: 'Not Started'
   },
   {
-    id: 'content-004',
-    title: 'Interview Engineer Training',
-    description: 'Train interview engineers on new assessment content and client-specific requirements',
-    phase: 'Content Development',
-    owner: 'Content',
-    estimatedDays: 3,
-    dependencies: ['content-003'],
-    critical: true,
-    status: 'pending'
+    id: 'step4-1',
+    phase: 'Step 4 - Vendor Org Setup',
+    item: 'Create vendor organization in Karat',
+    owner: 'Deployment Ops',
+    deliverable: 'Vendor org created',
+    status: 'Not Started'
   },
   {
-    id: 'content-005',
-    title: 'Content Review & Approval',
-    description: 'Client engineering leadership reviews and approves all assessment content',
-    phase: 'Content Development',
-    owner: 'Client',
-    estimatedDays: 5,
-    dependencies: ['content-004'],
-    critical: true,
-    status: 'pending'
-  },
-
-  // Testing & QA Phase
-  {
-    id: 'test-001',
-    title: 'Platform User Acceptance Testing',
-    description: 'Client team tests PTS platform functionality and user experience',
-    phase: 'Testing & QA',
-    owner: 'Client',
-    estimatedDays: 5,
-    dependencies: ['tech-003', 'content-005'],
-    critical: true,
-    status: 'pending'
+    id: 'step4-2',
+    phase: 'Step 4 - Vendor Org Setup',
+    item: 'Apply vendor tag and link to client org',
+    owner: 'Deployment Ops',
+    deliverable: 'Vendor linked to client org',
+    status: 'Not Started'
   },
   {
-    id: 'test-002',
-    title: 'Vendor Partner Platform Testing',
-    description: 'Vendor partners test their access and functionality in the partner portal',
-    phase: 'Testing & QA',
-    owner: 'Client',
-    estimatedDays: 3,
-    dependencies: ['contract-003', 'test-001'],
-    critical: true,
-    status: 'pending'
+    id: 'step4-3',
+    phase: 'Step 4 - Vendor Org Setup',
+    item: 'Invite vendor admin users',
+    owner: 'Deployment Ops',
+    deliverable: 'Vendor admins activated',
+    status: 'Not Started'
   },
   {
-    id: 'test-003',
-    title: 'End-to-End Workflow Testing',
-    description: 'Test complete candidate flow from invitation to results delivery',
-    phase: 'Testing & QA',
-    owner: 'Shared',
-    estimatedDays: 3,
-    dependencies: ['test-002'],
-    critical: true,
-    status: 'pending'
+    id: 'step4-4',
+    phase: 'Step 4 - Vendor Org Setup',
+    item: 'Run internal test invitation with dummy candidate',
+    owner: 'Deployment Ops',
+    deliverable: 'End-to-end access validated',
+    status: 'Not Started'
   },
   {
-    id: 'test-004',
-    title: 'Performance & Load Testing',
-    description: 'Conduct performance testing with expected candidate volume',
-    phase: 'Testing & QA',
-    owner: 'Engineering',
-    estimatedDays: 2,
-    dependencies: ['test-003'],
-    critical: false,
-    status: 'pending'
+    id: 'step4-5',
+    phase: 'Step 4 - Vendor Org Setup',
+    item: 'Authorize vendor for initial requisitions',
+    owner: 'Client Admin',
+    deliverable: 'Roles enabled for vendor',
+    status: 'Not Started'
   },
   {
-    id: 'test-005',
-    title: 'Security & Compliance Review',
-    description: 'Complete security audit and compliance verification',
-    phase: 'Testing & QA',
-    owner: 'Engineering',
-    estimatedDays: 3,
-    dependencies: ['test-001'],
-    critical: true,
-    status: 'pending'
-  },
-
-  // Go-Live Phase
-  {
-    id: 'golive-001',
-    title: 'Production Deployment',
-    description: 'Deploy PTS solution to production environment',
-    phase: 'Go-Live',
-    owner: 'Engineering',
-    estimatedDays: 1,
-    dependencies: ['test-005', 'test-003'],
-    critical: true,
-    status: 'pending'
+    id: 'step5-1',
+    phase: 'Step 5 - Vendor Demo & Onboarding',
+    item: 'Schedule onboarding demo sessions for each vendor',
+    owner: 'Deployment Lead',
+    deliverable: 'Sessions calendarized',
+    status: 'Not Started'
   },
   {
-    id: 'golive-002',
-    title: 'Client Team Training',
-    description: 'Train client team on PTS platform usage and administration',
-    phase: 'Go-Live',
-    owner: 'Customer Success',
-    estimatedDays: 2,
-    dependencies: ['golive-001'],
-    critical: true,
-    status: 'pending'
+    id: 'step5-2',
+    phase: 'Step 5 - Vendor Demo & Onboarding',
+    item: 'Demo invitations, submissions, funnel tracking, feedback',
+    owner: 'Deployment Lead',
+    deliverable: 'Workflow walkthrough recorded',
+    status: 'Not Started'
   },
   {
-    id: 'golive-003',
-    title: 'Vendor Partner Training',
-    description: 'Train all vendor partners on partner portal usage and workflows',
-    phase: 'Go-Live',
-    owner: 'Customer Success',
-    estimatedDays: 3,
-    dependencies: ['golive-001'],
-    critical: true,
-    status: 'pending'
+    id: 'step5-3',
+    phase: 'Step 5 - Vendor Demo & Onboarding',
+    item: 'Answer vendor FAQs and confirm role mappings',
+    owner: 'Deployment Lead',
+    deliverable: 'FAQ log updated',
+    status: 'Not Started'
   },
   {
-    id: 'golive-004',
-    title: 'Soft Launch with Limited Volume',
-    description: 'Begin with limited candidate volume to validate production workflows',
-    phase: 'Go-Live',
-    owner: 'Shared',
-    estimatedDays: 7,
-    dependencies: ['golive-002', 'golive-003'],
-    critical: true,
-    status: 'pending'
+    id: 'step5-4',
+    phase: 'Step 5 - Vendor Demo & Onboarding',
+    item: 'Share recorded FAQ and Academy resources',
+    owner: 'Deployment Lead',
+    deliverable: 'Resources distributed',
+    status: 'Not Started'
   },
   {
-    id: 'golive-005',
-    title: 'Full Production Launch',
-    description: 'Scale to full candidate volume across all roles and vendors',
-    phase: 'Go-Live',
-    owner: 'Shared',
-    estimatedDays: 3,
-    dependencies: ['golive-004'],
-    critical: true,
-    status: 'pending'
-  },
-
-  // Post-Launch Phase
-  {
-    id: 'post-001',
-    title: '30-Day Health Check',
-    description: 'Review system performance, user adoption, and initial metrics after 30 days',
-    phase: 'Post-Launch',
-    owner: 'Customer Success',
-    estimatedDays: 1,
-    dependencies: ['golive-005'],
-    critical: true,
-    status: 'pending'
+    id: 'step5-5',
+    phase: 'Step 5 - Vendor Demo & Onboarding',
+    item: 'Ensure 100% vendor user training completion',
+    owner: 'Deployment Lead',
+    deliverable: 'Training completion tracked',
+    status: 'Not Started'
   },
   {
-    id: 'post-002',
-    title: 'Feedback Collection & Analysis',
-    description: 'Collect feedback from client team and vendor partners for improvements',
-    phase: 'Post-Launch',
-    owner: 'Customer Success',
-    estimatedDays: 2,
-    dependencies: ['post-001'],
-    critical: false,
-    status: 'pending'
+    id: 'step6-1',
+    phase: 'Step 6 - Go-Live',
+    item: 'Agree on go-live date with client and vendors',
+    owner: 'Deployment Lead',
+    deliverable: 'Go-live calendarized',
+    status: 'Not Started'
   },
   {
-    id: 'post-003',
-    title: 'Performance Optimization',
-    description: 'Implement optimizations based on production usage patterns',
-    phase: 'Post-Launch',
-    owner: 'Engineering',
-    estimatedDays: 5,
-    dependencies: ['post-002'],
-    critical: false,
-    status: 'pending'
+    id: 'step6-2',
+    phase: 'Step 6 - Go-Live',
+    item: 'Support first vendor submissions',
+    owner: 'Vendor Admin',
+    deliverable: 'Initial candidates submitted',
+    status: 'Not Started'
   },
   {
-    id: 'post-004',
-    title: 'Success Metrics Review',
-    description: 'Review achievement of defined success metrics and ROI targets',
-    phase: 'Post-Launch',
-    owner: 'Shared',
-    estimatedDays: 2,
-    dependencies: ['post-001'],
-    critical: true,
-    status: 'pending'
+    id: 'step7-1',
+    phase: 'Step 7 - Stabilization & Cadence',
+    item: 'Schedule bi-weekly syncs with client and vendors',
+    owner: 'Deployment Lead',
+    deliverable: 'Cadence calendarized',
+    status: 'Not Started'
   },
   {
-    id: 'post-005',
-    title: 'Quarterly Business Review Setup',
-    description: 'Establish ongoing QBR process for continuous improvement',
-    phase: 'Post-Launch',
-    owner: 'Customer Success',
-    estimatedDays: 1,
-    dependencies: ['post-004'],
-    critical: false,
-    status: 'pending'
+    id: 'step7-2',
+    phase: 'Step 7 - Stabilization & Cadence',
+    item: 'Review KPIs and highlight risks during syncs',
+    owner: 'Deployment Lead',
+    deliverable: 'KPI tracker updated',
+    status: 'Not Started'
+  },
+  {
+    id: 'step7-3',
+    phase: 'Step 7 - Stabilization & Cadence',
+    item: 'Track vendor feedback, risks, and open questions',
+    owner: 'Deployment Lead',
+    deliverable: 'Issue log maintained',
+    status: 'Not Started'
+  },
+  {
+    id: 'step7-4',
+    phase: 'Step 7 - Stabilization & Cadence',
+    item: 'Share role and assessment descriptions until productized',
+    owner: 'Deployment Lead',
+    deliverable: 'Distribution process in place',
+    status: 'Not Started'
+  },
+  {
+    id: 'step8-1',
+    phase: 'Step 8 - Handover to Steady-State',
+    item: 'Deliver 30-45 day executive snapshot',
+    owner: 'Deployment Lead',
+    deliverable: 'Snapshot sent to sponsor',
+    status: 'Not Started'
+  },
+  {
+    id: 'step8-2',
+    phase: 'Step 8 - Handover to Steady-State',
+    item: 'Confirm Wave-2 vendor expansion plan',
+    owner: 'GTM Lead',
+    deliverable: 'Expansion roadmap aligned',
+    status: 'Not Started'
+  },
+  {
+    id: 'step8-3',
+    phase: 'Step 8 - Handover to Steady-State',
+    item: 'Log risks and lessons learned',
+    owner: 'Deployment Lead',
+    deliverable: 'Risk register updated',
+    status: 'Not Started'
+  },
+  {
+    id: 'step8-4',
+    phase: 'Step 8 - Handover to Steady-State',
+    item: 'Update playbook artifacts',
+    owner: 'Deployment Lead',
+    deliverable: 'Documentation refreshed',
+    status: 'Not Started'
+  },
+  {
+    id: 'cadence-1',
+    phase: 'Cadence',
+    item: 'Run bi-weekly syncs covering metrics, feedback, actions, risks',
+    owner: 'Deployment Lead',
+    deliverable: 'Meeting notes archived',
+    status: 'Not Started'
+  },
+  {
+    id: 'cadence-2',
+    phase: 'Cadence',
+    item: 'Host 15-minute check-ins for new vendors during first 6 weeks',
+    owner: 'Vendor Success',
+    deliverable: 'Attendance tracked',
+    status: 'Not Started'
+  },
+  {
+    id: 'cadence-3',
+    phase: 'Cadence',
+    item: 'Deliver monthly executive snapshot to client sponsor',
+    owner: 'Deployment Lead',
+    deliverable: 'Monthly snapshot delivered',
+    status: 'Not Started'
+  },
+  {
+    id: 'cadence-4',
+    phase: 'Cadence',
+    item: 'Conduct quarterly business review and expansion planning',
+    owner: 'GTM Lead',
+    deliverable: 'QBR completed',
+    status: 'Not Started'
+  },
+  {
+    id: 'risk-1',
+    phase: 'Risks & Watchouts',
+    item: 'Mitigate vendor resistance via client sponsor support',
+    owner: 'Client Sponsor',
+    deliverable: 'Vendor alignment reinforced',
+    status: 'Not Started'
+  },
+  {
+    id: 'risk-2',
+    phase: 'Risks & Watchouts',
+    item: 'Monitor submission quality with checklists and coaching',
+    owner: 'Deployment Lead',
+    deliverable: 'Quality improvements documented',
+    status: 'Not Started'
+  },
+  {
+    id: 'risk-3',
+    phase: 'Risks & Watchouts',
+    item: 'Prevent role ambiguity by sharing role and assessment details',
+    owner: 'Deployment Lead',
+    deliverable: 'Role clarity maintained',
+    status: 'Not Started'
   }
 ]
 
+const statusStyles: Record<DeploymentChecklistItem['status'], string> = {
+  'Not Started': 'bg-gray-100 text-gray-700',
+  'In Progress': 'bg-blue-100 text-blue-800',
+  'Complete': 'bg-green-100 text-green-800'
+}
+
+const statusOptions: DeploymentChecklistItem['status'][] = ['Not Started', 'In Progress', 'Complete']
+
+const parsePhase = (phase: string) => {
+  const [step, ...rest] = phase.split(' - ')
+  return {
+    step,
+    subgroup: rest.join(' - ')
+  }
+}
+
+// Video Thumbnail Component
+function VideoThumbnail({ videoUrl, className }: {
+  videoUrl: string
+  className?: string
+}) {
+  const [thumbnail, setThumbnail] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    const generateThumbnail = () => {
+      const video = videoRef.current
+      if (!video) return
+
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      video.currentTime = 1 // Seek to 1 second for thumbnail
+
+      const onLoadedData = () => {
+        canvas.width = video.videoWidth
+        canvas.height = video.videoHeight
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob)
+            setThumbnail(url)
+          }
+          setLoading(false)
+        }, 'image/jpeg', 0.8)
+      }
+
+      video.addEventListener('loadeddata', onLoadedData, { once: true })
+      video.load()
+    }
+
+    generateThumbnail()
+
+    return () => {
+      if (thumbnail) {
+        URL.revokeObjectURL(thumbnail)
+      }
+    }
+  }, [videoUrl])
+
+  if (loading) {
+    return (
+      <div className={`bg-gray-200 flex items-center justify-center ${className}`}>
+        <Video className="w-12 h-12 text-gray-400 animate-pulse" />
+      </div>
+    )
+  }
+
+  return (
+    <div className={`bg-gray-200 overflow-hidden ${className}`}>
+      {thumbnail ? (
+        <img
+          src={thumbnail}
+          alt="Video thumbnail"
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <Video className="w-12 h-12 text-gray-400" />
+        </div>
+      )}
+      <video
+        ref={videoRef}
+        className="hidden"
+        preload="metadata"
+        muted
+        playsInline
+      >
+        <source src={videoUrl} type="video/quicktime" />
+        <source src={videoUrl} type="video/mp4" />
+      </video>
+    </div>
+  )
+}
+
+// Client Demo Summary Component
+function ClientDemoSummary() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">{clientDemoSummary.title}</h3>
+        <p className="text-gray-700 mb-4">{clientDemoSummary.overview}</p>
+      </div>
+
+      <div>
+        <h4 className="font-semibold text-gray-900 mb-3">Key Demo Points</h4>
+        <ul className="space-y-2">
+          {clientDemoSummary.keyPoints.map((point, index) => (
+            <li key={index} className="flex items-start gap-2">
+              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+              <span className="text-gray-700 text-sm">{point}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div>
+        <h4 className="font-semibold text-gray-900 mb-3">Demo Environments</h4>
+        <div className="grid gap-4">
+          <Card className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Monitor className="w-4 h-4 text-blue-600" />
+              <h5 className="font-medium text-gray-900">{clientDemoSummary.demoEnvironments.production.name}</h5>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">{clientDemoSummary.demoEnvironments.production.recommendation}</p>
+
+            <div className="grid md:grid-cols-2 gap-3">
+              <div>
+                <h6 className="text-xs font-medium text-green-700 mb-1">PROS</h6>
+                <ul className="space-y-1">
+                  {clientDemoSummary.demoEnvironments.production.pros.map((pro, index) => (
+                    <li key={index} className="text-xs text-gray-600 flex items-start gap-1">
+                      <CheckCircle className="w-3 h-3 text-green-600 mt-0.5 flex-shrink-0" />
+                      {pro}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h6 className="text-xs font-medium text-red-700 mb-1">CONS</h6>
+                <ul className="space-y-1">
+                  {clientDemoSummary.demoEnvironments.production.cons.map((con, index) => (
+                    <li key={index} className="text-xs text-gray-600 flex items-start gap-1">
+                      <X className="w-3 h-3 text-red-600 mt-0.5 flex-shrink-0" />
+                      {con}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4 border-blue-200 bg-blue-50">
+            <div className="flex items-center gap-2 mb-2">
+              <Monitor className="w-4 h-4 text-blue-600" />
+              <h5 className="font-medium text-gray-900">{clientDemoSummary.demoEnvironments.staging.name}</h5>
+              <Badge variant="outline" className="text-xs text-blue-700 bg-blue-100">Recommended</Badge>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">{clientDemoSummary.demoEnvironments.staging.recommendation}</p>
+
+            <div className="grid md:grid-cols-2 gap-3">
+              <div>
+                <h6 className="text-xs font-medium text-green-700 mb-1">PROS</h6>
+                <ul className="space-y-1">
+                  {clientDemoSummary.demoEnvironments.staging.pros.map((pro, index) => (
+                    <li key={index} className="text-xs text-gray-600 flex items-start gap-1">
+                      <CheckCircle className="w-3 h-3 text-green-600 mt-0.5 flex-shrink-0" />
+                      {pro}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h6 className="text-xs font-medium text-red-700 mb-1">CONS</h6>
+                <ul className="space-y-1">
+                  {clientDemoSummary.demoEnvironments.staging.cons.map((con, index) => (
+                    <li key={index} className="text-xs text-gray-600 flex items-start gap-1">
+                      <X className="w-3 h-3 text-red-600 mt-0.5 flex-shrink-0" />
+                      {con}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Add New FAQ Form Component
+function AddFAQForm({ onAdd }: { onAdd: (faq: FAQItem) => void }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [question, setQuestion] = useState('')
+  const [answer, setAnswer] = useState('')
+  const [category, setCategory] = useState<FAQItem['category']>('Technical')
+  const [tags, setTags] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!question.trim() || !answer.trim()) return
+
+    setIsSubmitting(true)
+    try {
+      const response = await fetch('/api/faq', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: question.trim(),
+          answer: answer.trim(),
+          category,
+          tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+        }),
+      })
+
+      if (response.ok) {
+        const newFAQ = await response.json()
+        onAdd(newFAQ)
+
+        // Reset form
+        setQuestion('')
+        setAnswer('')
+        setCategory('Technical')
+        setTags('')
+        setIsOpen(false)
+      }
+    } catch (error) {
+      console.error('Error adding FAQ:', error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <>
+      <Button onClick={() => setIsOpen(true)} className="mb-6">
+        <Plus className="w-4 h-4 mr-2" />
+        Add New FAQ
+      </Button>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add New FAQ</DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <Label htmlFor="question">Question *</Label>
+              <Input
+                id="question"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                placeholder="Enter your question..."
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="answer">Answer *</Label>
+              <Textarea
+                id="answer"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="Enter the answer..."
+                rows={4}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="category">Category</Label>
+              <Select value={category} onValueChange={(value: FAQItem['category']) => setCategory(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Technical">Technical</SelectItem>
+                  <SelectItem value="Features">Features</SelectItem>
+                  <SelectItem value="Pricing">Pricing</SelectItem>
+                  <SelectItem value="Integration">Integration</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="tags">Tags (comma-separated)</Label>
+              <Input
+                id="tags"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="tag1, tag2, tag3..."
+              />
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Adding...' : 'Add FAQ'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
+// Client Demo FAQ Component
+function ClientDemoFAQ() {
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
+
+  const toggleExpanded = (id: string) => {
+    const newExpanded = new Set(expandedItems)
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id)
+    } else {
+      newExpanded.add(id)
+    }
+    setExpandedItems(newExpanded)
+  }
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'Technical': return 'bg-blue-100 text-blue-800'
+      case 'Features': return 'bg-green-100 text-green-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Client Demo FAQ</h3>
+        <p className="text-gray-600 text-sm">
+          Common questions and best practices for demonstrating PTS to client prospects.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        {clientDemoFAQ.map((faq) => (
+          <Card key={faq.id} className="overflow-hidden">
+            <div
+              className="p-4 cursor-pointer hover:bg-gray-50"
+              onClick={() => toggleExpanded(faq.id)}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge className={getCategoryColor(faq.category)} variant="secondary">
+                      {faq.category}
+                    </Badge>
+                  </div>
+                  <h4 className="font-medium text-gray-900 mb-2 text-sm">{faq.question}</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {faq.tags.slice(0, 3).map((tag) => (
+                      <span key={tag} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                        {tag}
+                      </span>
+                    ))}
+                    {faq.tags.length > 3 && (
+                      <span className="text-xs text-gray-500">+{faq.tags.length - 3} more</span>
+                    )}
+                  </div>
+                </div>
+                <HelpCircle className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                  expandedItems.has(faq.id) ? 'rotate-180' : ''
+                }`} />
+              </div>
+
+              {expandedItems.has(faq.id) && (
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <p className="text-gray-700 text-sm leading-relaxed">{faq.answer}</p>
+                </div>
+              )}
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Video Player Modal Component
+function VideoPlayerModal({ video, isOpen, onClose }: {
+  video: TrainingVideo | null
+  isOpen: boolean
+  onClose: () => void
+}) {
+  if (!video) return null
+
+  const isClientDemo = video.id === 'pts-demo-client-side'
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] p-0 overflow-hidden">
+        <div className="flex flex-col h-full">
+          <DialogHeader className="p-6 pb-4 border-b">
+            <DialogTitle className="text-xl font-semibold">{video.title}</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-auto">
+            {isClientDemo ? (
+              <Tabs defaultValue="video" className="h-full">
+                <div className="px-6 pt-4 border-b">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="video" className="flex items-center gap-2">
+                      <Play className="w-4 h-4" />
+                      Video
+                    </TabsTrigger>
+                    <TabsTrigger value="guide" className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Demo Guide
+                    </TabsTrigger>
+                    <TabsTrigger value="faq" className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4" />
+                      FAQ
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <TabsContent value="video" className="p-6 space-y-4">
+                  <div className="bg-black rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
+                    <video
+                      className="w-full h-full"
+                      controls
+                      preload="metadata"
+                      src={video.videoUrl}
+                    >
+                      <source src={video.videoUrl} type="video/quicktime" />
+                      <source src={video.videoUrl} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-700 mb-3">{video.description}</p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Badge variant="outline" className="text-xs">{video.category}</Badge>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Badge variant="outline" className="text-xs">{video.difficulty}</Badge>
+                      </span>
+                      {video.duration !== 'TBD' && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {video.duration}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="guide" className="p-6 overflow-y-auto max-h-[60vh]">
+                  <ClientDemoSummary />
+                </TabsContent>
+
+                <TabsContent value="faq" className="p-6 overflow-y-auto max-h-[60vh]">
+                  <ClientDemoFAQ />
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <div className="p-6 space-y-4">
+                <div className="bg-black rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
+                  <video
+                    className="w-full h-full"
+                    controls
+                    preload="metadata"
+                    src={video.videoUrl}
+                  >
+                    <source src={video.videoUrl} type="video/quicktime" />
+                    <source src={video.videoUrl} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-700 mb-3">{video.description}</p>
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Badge variant="outline" className="text-xs">{video.category}</Badge>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Badge variant="outline" className="text-xs">{video.difficulty}</Badge>
+                    </span>
+                    {video.duration !== 'TBD' && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {video.duration}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // Component functions for the training library
-function VideoCard({ video }: { video: TrainingVideo }) {
+function VideoCard({ video, onPlay }: {
+  video: TrainingVideo
+  onPlay: (video: TrainingVideo) => void
+}) {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Beginner': return 'bg-green-100 text-green-800'
@@ -630,11 +1208,185 @@ function VideoCard({ video }: { video: TrainingVideo }) {
     }
   }
 
+  const isClientDemo = video.id === 'pts-demo-client-side'
+  const isVendorDemo = video.id === 'pts-demo-vendor-side'
+  const isDeploymentTraining = video.id === 'pts-deployment-training'
+
+  if (isClientDemo) {
+    return (
+      <Link href="/pts-training/client-demo">
+        <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer">
+          <div className="relative">
+            <div className="w-full h-48 relative group">
+              <VideoThumbnail videoUrl={video.videoUrl} className="w-full h-full" />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full p-4">
+                    <ExternalLink className="w-12 h-12 text-white drop-shadow-lg" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="absolute top-2 right-2">
+              <Badge className={getDifficultyColor(video.difficulty)} variant="secondary">
+                {video.difficulty}
+              </Badge>
+            </div>
+            <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm">
+              Full Training
+            </div>
+            <div className="absolute top-2 left-2">
+              <Badge className="bg-blue-100 text-blue-800" variant="secondary">
+                Interactive Guide
+              </Badge>
+            </div>
+            {video.completed && (
+              <div className="absolute top-2 left-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+              </div>
+            )}
+          </div>
+
+          <div className="p-4">
+            <h3 className="font-semibold text-gray-900 mb-2">{video.title}</h3>
+            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{video.description}</p>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <FileText className="w-3 h-3" />
+                <span>Video + Guide + FAQ</span>
+              </div>
+              <Button size="sm" className="flex items-center gap-1">
+                <ExternalLink className="w-3 h-3" />
+                Open Training
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </Link>
+    )
+  }
+
+  if (isVendorDemo) {
+    return (
+      <Link href="/pts-training/vendor-demo">
+        <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer">
+          <div className="relative">
+            <div className="w-full h-48 relative group">
+              <VideoThumbnail videoUrl={video.videoUrl} className="w-full h-full" />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full p-4">
+                    <ExternalLink className="w-12 h-12 text-white drop-shadow-lg" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="absolute top-2 right-2">
+              <Badge className={getDifficultyColor(video.difficulty)} variant="secondary">
+                {video.difficulty}
+              </Badge>
+            </div>
+            <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm">
+              Full Training
+            </div>
+            <div className="absolute top-2 left-2">
+              <Badge className="bg-green-100 text-green-800" variant="secondary">
+                Interactive Guide
+              </Badge>
+            </div>
+            {video.completed && (
+              <div className="absolute top-2 left-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+              </div>
+            )}
+          </div>
+
+          <div className="p-4">
+            <h3 className="font-semibold text-gray-900 mb-2">{video.title}</h3>
+            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{video.description}</p>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <FileText className="w-3 h-3" />
+                <span>Video + Guide + FAQ</span>
+              </div>
+              <Button size="sm" className="flex items-center gap-1">
+                <ExternalLink className="w-3 h-3" />
+                Open Training
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </Link>
+    )
+  }
+
+  if (isDeploymentTraining) {
+    return (
+      <Link href="/pts-training/deployment-demo">
+        <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer">
+          <div className="relative">
+            <div className="w-full h-48 relative group">
+              <VideoThumbnail videoUrl={video.videoUrl} className="w-full h-full" />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full p-4">
+                    <ExternalLink className="w-12 h-12 text-white drop-shadow-lg" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="absolute top-2 right-2">
+              <Badge className={getDifficultyColor(video.difficulty)} variant="secondary">
+                {video.difficulty}
+              </Badge>
+            </div>
+            <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm">
+              Full Training
+            </div>
+            <div className="absolute top-2 left-2">
+              <Badge className="bg-orange-100 text-orange-800" variant="secondary">
+                Implementation Guide
+              </Badge>
+            </div>
+            {video.completed && (
+              <div className="absolute top-2 left-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+              </div>
+            )}
+          </div>
+
+          <div className="p-4">
+            <h3 className="font-semibold text-gray-900 mb-2">{video.title}</h3>
+            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{video.description}</p>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <FileText className="w-3 h-3" />
+                <span>Video + Guide + FAQ</span>
+              </div>
+              <Button size="sm" className="flex items-center gap-1">
+                <ExternalLink className="w-3 h-3" />
+                Open Training
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </Link>
+    )
+  }
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
-      <div className="relative">
-        <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-          <Video className="w-12 h-12 text-gray-400" />
+      <div className="relative cursor-pointer" onClick={() => onPlay(video)}>
+        <div className="w-full h-48 relative group">
+          <VideoThumbnail videoUrl={video.videoUrl} className="w-full h-full" />
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <Play className="w-16 h-16 text-white drop-shadow-lg" />
+            </div>
+          </div>
         </div>
         <div className="absolute top-2 right-2">
           <Badge className={getDifficultyColor(video.difficulty)} variant="secondary">
@@ -650,11 +1402,11 @@ function VideoCard({ video }: { video: TrainingVideo }) {
           </div>
         )}
       </div>
-      
+
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 mb-2">{video.title}</h3>
         <p className="text-sm text-gray-600 mb-3 line-clamp-2">{video.description}</p>
-        
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-gray-500">
             <Clock className="w-3 h-3" />
@@ -666,7 +1418,11 @@ function VideoCard({ video }: { video: TrainingVideo }) {
               </>
             )}
           </div>
-          <Button size="sm" className="flex items-center gap-1">
+          <Button
+            size="sm"
+            className="flex items-center gap-1"
+            onClick={() => onPlay(video)}
+          >
             <Play className="w-3 h-3" />
             {video.completed ? 'Rewatch' : 'Watch'}
           </Button>
@@ -724,84 +1480,147 @@ function FAQCard({ faq }: { faq: FAQItem }) {
   )
 }
 
-function DeploymentTaskCard({ task }: { task: DeploymentTask }) {
-  const getOwnerColor = (owner: string) => {
-    switch (owner) {
-      case 'Sales': return 'bg-blue-100 text-blue-800'
-      case 'Customer Success': return 'bg-green-100 text-green-800'
-      case 'Engineering': return 'bg-purple-100 text-purple-800'
-      case 'Content': return 'bg-orange-100 text-orange-800'
-      case 'Client': return 'bg-gray-100 text-gray-800'
-      case 'Shared': return 'bg-indigo-100 text-indigo-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800'
-      case 'in-progress': return 'bg-yellow-100 text-yellow-800'
-      case 'blocked': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-600'
-    }
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed': return <CheckCircle className="w-4 h-4 text-green-500" />
-      case 'in-progress': return <Clock className="w-4 h-4 text-yellow-500" />
-      case 'blocked': return <AlertTriangle className="w-4 h-4 text-red-500" />
-      default: return <Calendar className="w-4 h-4 text-gray-400" />
-    }
-  }
-
-  return (
-    <Card className="p-4 hover:shadow-md transition-shadow duration-200">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          {getStatusIcon(task.status)}
-          <h4 className="font-semibold text-gray-900">{task.title}</h4>
-          {task.critical && (
-            <Badge variant="destructive" className="text-xs">
-              Critical
-            </Badge>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge className={getOwnerColor(task.owner)} variant="secondary">
-            {task.owner}
-          </Badge>
-          <Badge className={getStatusColor(task.status)} variant="secondary">
-            {task.status}
-          </Badge>
-        </div>
-      </div>
-      
-      <p className="text-sm text-gray-600 mb-3">{task.description}</p>
-      
-      <div className="flex items-center justify-between text-xs text-gray-500">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
-            <span>{task.estimatedDays} day{task.estimatedDays !== 1 ? 's' : ''}</span>
-          </div>
-          {task.dependencies && task.dependencies.length > 0 && (
-            <div className="flex items-center gap-1">
-              <Target className="w-3 h-3" />
-              <span>{task.dependencies.length} dependencies</span>
-            </div>
-          )}
-        </div>
-        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-          {task.id}
-        </span>
-      </div>
-    </Card>
-  )
-}
-
 export default function PTSTrainingPage() {
   const [activeSection, setActiveSection] = useState('Internal Demo Training')
+  const [phaseFilter, setPhaseFilter] = useState<string>('All')
+  const [statusFilter, setStatusFilter] = useState<string>('All')
+  const [ownerFilter, setOwnerFilter] = useState<string>('All')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedVideo, setSelectedVideo] = useState<TrainingVideo | null>(null)
+  const [isVideoPlayerOpen, setIsVideoPlayerOpen] = useState(false)
+  const [customFAQs, setCustomFAQs] = useState<FAQItem[]>([])
+  const [allFAQs, setAllFAQs] = useState<FAQItem[]>(faqItems)
+
+  // Load custom FAQs from API
+  const loadCustomFAQs = useCallback(async () => {
+    try {
+      const response = await fetch('/api/faq')
+      if (response.ok) {
+        const customItems = await response.json()
+        setCustomFAQs(customItems)
+        setAllFAQs([...faqItems, ...customItems])
+      }
+    } catch (error) {
+      console.error('Error loading custom FAQs:', error)
+    }
+  }, [])
+
+  // Handle adding new FAQ
+  const handleAddFAQ = useCallback((newFAQ: FAQItem) => {
+    setCustomFAQs(prev => [...prev, newFAQ])
+    setAllFAQs(prev => [...prev, newFAQ])
+  }, [])
+
+  // Load custom FAQs on mount
+  useEffect(() => {
+    loadCustomFAQs()
+  }, [loadCustomFAQs])
+
+  const phaseOptions = useMemo(
+    () => Array.from(new Set(deploymentChecklist.map((item) => item.phase))),
+    [deploymentChecklist]
+  )
+
+  const ownerOptions = useMemo(
+    () => Array.from(new Set(deploymentChecklist.map((item) => item.owner))),
+    [deploymentChecklist]
+  )
+
+  const stepOrder = useMemo(() => {
+    const order: string[] = []
+
+    deploymentChecklist.forEach((item) => {
+      const { step } = parsePhase(item.phase)
+      if (!order.includes(step)) {
+        order.push(step)
+      }
+    })
+
+    return order
+  }, [deploymentChecklist])
+
+  const subgroupOrder = useMemo(() => {
+    const map = new Map<string, string[]>()
+
+    deploymentChecklist.forEach((item) => {
+      const { step, subgroup } = parsePhase(item.phase)
+      const existing = map.get(step)
+
+      if (existing) {
+        if (!existing.includes(subgroup)) {
+          existing.push(subgroup)
+        }
+      } else {
+        map.set(step, [subgroup])
+      }
+    })
+
+    return map
+  }, [deploymentChecklist])
+
+  const filteredChecklist = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase()
+
+    return deploymentChecklist.filter((item) => {
+      const matchesPhase = phaseFilter === 'All' || item.phase === phaseFilter
+      const matchesStatus = statusFilter === 'All' || item.status === statusFilter
+      const matchesOwner = ownerFilter === 'All' || item.owner === ownerFilter
+      const matchesSearch =
+        query.length === 0 ||
+        item.item.toLowerCase().includes(query) ||
+        item.deliverable.toLowerCase().includes(query) ||
+        item.phase.toLowerCase().includes(query) ||
+        item.owner.toLowerCase().includes(query)
+
+      return matchesPhase && matchesStatus && matchesOwner && matchesSearch
+    })
+  }, [phaseFilter, statusFilter, ownerFilter, searchTerm])
+
+  const groupedChecklist = useMemo(() => {
+    const structure = new Map<string, Map<string, DeploymentChecklistItem[]>>()
+
+    filteredChecklist.forEach((item) => {
+      const { step, subgroup } = parsePhase(item.phase)
+
+      if (!structure.has(step)) {
+        structure.set(step, new Map<string, DeploymentChecklistItem[]>())
+      }
+
+      const group = structure.get(step)!
+      const items = group.get(subgroup) ?? []
+      items.push(item)
+      group.set(subgroup, items)
+    })
+
+    return structure
+  }, [filteredChecklist])
+
+  const checklistSummary = useMemo(() => {
+    const totals = {
+      total: filteredChecklist.length,
+      complete: 0,
+      inProgress: 0,
+      notStarted: 0,
+    }
+
+    filteredChecklist.forEach((item) => {
+      if (item.status === 'Complete') totals.complete += 1
+      else if (item.status === 'In Progress') totals.inProgress += 1
+      else totals.notStarted += 1
+    })
+
+    return totals
+  }, [filteredChecklist])
+
+  const handlePlayVideo = (video: TrainingVideo) => {
+    setSelectedVideo(video)
+    setIsVideoPlayerOpen(true)
+  }
+
+  const handleCloseVideo = () => {
+    setIsVideoPlayerOpen(false)
+    setSelectedVideo(null)
+  }
 
   return (
     <div className="flex h-screen w-full bg-[#FAFAFA] overflow-hidden">
@@ -819,41 +1638,14 @@ export default function PTSTrainingPage() {
             {activeSection === 'Internal Demo Training' ? (
               <div>
 
-                {/* Video Categories */}
+                {/* Training Videos */}
                 <div className="space-y-8">
-                  {/* Demo Setup */}
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Demo Setup</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4">PTS Demo Videos</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {trainingVideos
-                        .filter(video => video.category === 'Demo Setup')
-                        .map((video) => (
-                          <VideoCard key={video.id} video={video} />
-                        ))}
-                    </div>
-                  </div>
-
-                  {/* Demo Execution */}
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Demo Execution</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {trainingVideos
-                        .filter(video => video.category === 'Demo Execution')
-                        .map((video) => (
-                          <VideoCard key={video.id} video={video} />
-                        ))}
-                    </div>
-                  </div>
-
-                  {/* Advanced Features */}
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Advanced Features</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {trainingVideos
-                        .filter(video => video.category === 'Advanced Features')
-                        .map((video) => (
-                          <VideoCard key={video.id} video={video} />
-                        ))}
+                      {trainingVideos.map((video) => (
+                        <VideoCard key={video.id} video={video} onPlay={handlePlayVideo} />
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -865,23 +1657,36 @@ export default function PTSTrainingPage() {
                   <h3 className="text-xl font-semibold text-gray-900 mb-4">Frequently Asked Questions</h3>
                   <p className="text-gray-600 mb-6">
                     Common questions from vendors and prospects about Partner Talent Solutions and technical assessments.
+                    Add your own questions and answers to customize this knowledge base.
                   </p>
                 </div>
 
+                {/* Add New FAQ Form */}
+                <AddFAQForm onAdd={handleAddFAQ} />
+
                 {/* FAQ Categories */}
                 <div className="space-y-6">
-                  {['Technical', 'Features', 'Pricing', 'Integration'].map((category) => (
-                    <div key={category}>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-4">{category}</h4>
-                      <div className="space-y-3">
-                        {faqItems
-                          .filter(faq => faq.category === category)
-                          .map((faq) => (
+                  {['Technical', 'Features', 'Pricing', 'Integration'].map((category) => {
+                    const categoryFAQs = allFAQs.filter(faq => faq.category === category)
+
+                    if (categoryFAQs.length === 0) return null
+
+                    return (
+                      <div key={category}>
+                        <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                          {category}
+                          <Badge variant="outline" className="ml-2 text-xs">
+                            {categoryFAQs.length}
+                          </Badge>
+                        </h4>
+                        <div className="space-y-3">
+                          {categoryFAQs.map((faq) => (
                             <FAQCard key={faq.id} faq={faq} />
                           ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             ) : (
@@ -890,115 +1695,189 @@ export default function PTSTrainingPage() {
                 <div className="mb-6">
                   <h3 className="text-xl font-semibold text-gray-900 mb-4">PTS Deployment Checklist</h3>
                   <p className="text-gray-600 mb-6">
-                    Comprehensive checklist for Partner Talent Solutions client deployments. Track progress across all phases from pre-sales to post-launch.
+                    Pure columnar checklist derived from the Partner Talent Solutions deployment playbook. Track ownership and deliverables for every step.
                   </p>
                 </div>
 
-                {/* Deployment Overview Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                  <Card className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">Total Tasks</p>
-                        <p className="text-2xl font-bold text-gray-900">{deploymentTasks.length}</p>
-                      </div>
-                      <Rocket className="w-8 h-8 text-blue-500" />
+                <div className="mb-6 space-y-4">
+                  <div className="flex flex-wrap gap-3">
+                    <div className="w-full sm:w-64">
+                      <Input
+                        value={searchTerm}
+                        onChange={(event) => setSearchTerm(event.target.value)}
+                        placeholder="Search by keyword, owner, or deliverable"
+                        aria-label="Search deployment checklist"
+                      />
                     </div>
-                    <div className="mt-2">
-                      <Badge variant="secondary" className="text-xs">
-                        7 Phases
-                      </Badge>
-                    </div>
-                  </Card>
 
-                  <Card className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">Critical Tasks</p>
-                        <p className="text-2xl font-bold text-red-600">{deploymentTasks.filter(t => t.critical).length}</p>
-                      </div>
-                      <AlertTriangle className="w-8 h-8 text-red-500" />
-                    </div>
-                    <div className="mt-2">
-                      <Badge variant="destructive" className="text-xs">
-                        High Priority
-                      </Badge>
-                    </div>
-                  </Card>
-
-                  <Card className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">Est. Timeline</p>
-                        <p className="text-2xl font-bold text-blue-600">8-12</p>
-                      </div>
-                      <Calendar className="w-8 h-8 text-blue-500" />
-                    </div>
-                    <div className="mt-2">
-                      <Badge variant="secondary" className="text-xs">
-                        Weeks
-                      </Badge>
-                    </div>
-                  </Card>
-
-                  <Card className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">Team Members</p>
-                        <p className="text-2xl font-bold text-green-600">6</p>
-                      </div>
-                      <Users className="w-8 h-8 text-green-500" />
-                    </div>
-                    <div className="mt-2">
-                      <Badge variant="secondary" className="text-xs">
-                        Cross-functional
-                      </Badge>
-                    </div>
-                  </Card>
-                </div>
-
-                {/* Deployment Phases */}
-                <div className="space-y-8">
-                  {['Pre-Sales', 'Contract & Setup', 'Technical Integration', 'Content Development', 'Testing & QA', 'Go-Live', 'Post-Launch'].map((phase) => (
-                    <div key={phase}>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <Rocket className="w-5 h-5 mr-2 text-blue-500" />
-                        {phase}
-                        <Badge variant="outline" className="ml-3 text-xs">
-                          {deploymentTasks.filter(task => task.phase === phase).length} tasks
-                        </Badge>
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {deploymentTasks
-                          .filter(task => task.phase === phase)
-                          .map((task) => (
-                            <DeploymentTaskCard key={task.id} task={task} />
+                    <div className="w-full sm:w-52">
+                      <Select value={phaseFilter} onValueChange={setPhaseFilter}>
+                        <SelectTrigger aria-label="Filter by phase">
+                          <SelectValue placeholder="All phases" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="All">All phases</SelectItem>
+                          {phaseOptions.map((phase) => (
+                            <SelectItem key={phase} value={phase}>
+                              {phase}
+                            </SelectItem>
                           ))}
-                      </div>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  ))}
-                </div>
 
-                {/* Export Actions */}
-                <div className="flex justify-center mt-8">
-                  <div className="flex gap-4">
-                    <Button variant="outline" size="lg">
-                      <FileText className="w-4 h-4 mr-2" />
-                      Export Checklist (PDF)
-                    </Button>
-                    <Button variant="outline" size="lg">
-                      <Settings className="w-4 h-4 mr-2" />
-                      Customize Template
-                    </Button>
+                    <div className="w-full sm:w-52">
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger aria-label="Filter by status">
+                          <SelectValue placeholder="All statuses" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="All">All statuses</SelectItem>
+                          {statusOptions.map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {status}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="w-full sm:w-52">
+                      <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+                        <SelectTrigger aria-label="Filter by owner">
+                          <SelectValue placeholder="All owners" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="All">All owners</SelectItem>
+                          {ownerOptions.map((owner) => (
+                            <SelectItem key={owner} value={owner}>
+                              {owner}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+                    <Badge variant="outline" className="bg-white">
+                      Showing {filteredChecklist.length} of {deploymentChecklist.length} steps
+                    </Badge>
+                    <Badge variant="outline" className="bg-white">
+                      {checklistSummary.complete} complete
+                    </Badge>
+                    <Badge variant="outline" className="bg-white">
+                      {checklistSummary.inProgress} in progress
+                    </Badge>
+                    <Badge variant="outline" className="bg-white">
+                      {checklistSummary.notStarted} not started
+                    </Badge>
                   </div>
                 </div>
+
+                <Card className="overflow-hidden border border-gray-200 shadow-sm">
+                  <Table>
+                    <TableHeader className="bg-gray-50">
+                      <TableRow className="bg-gray-50 hover:bg-gray-50">
+                        <TableHead className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                          Checklist Item
+                        </TableHead>
+                        <TableHead className="w-[200px] text-xs font-semibold uppercase tracking-wide text-gray-500">
+                          Owner
+                        </TableHead>
+                        <TableHead className="w-[260px] text-xs font-semibold uppercase tracking-wide text-gray-500">
+                          Deliverable / Notes
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredChecklist.length > 0 ? (
+                        stepOrder.map((step) => {
+                          const stepGroups = groupedChecklist.get(step)
+                          if (!stepGroups) {
+                            return null
+                          }
+
+                          return (
+                            <Fragment key={`group-${step}`}>
+                              <TableRow className="bg-gray-100 hover:bg-gray-100">
+                                <TableCell
+                                  colSpan={3}
+                                  className="px-4 py-3 text-sm font-semibold uppercase tracking-wide text-gray-700"
+                                >
+                                  {step}
+                                </TableCell>
+                              </TableRow>
+
+                              {(subgroupOrder.get(step) ?? ['']).map((subgroup) => {
+                                const items = stepGroups.get(subgroup)
+                                if (!items || items.length === 0) {
+                                  return null
+                                }
+
+                                return (
+                                  <Fragment key={`subgroup-${step}-${subgroup || 'root'}`}>
+                                    {subgroup && (
+                                      <TableRow className="bg-gray-50 hover:bg-gray-50">
+                                        <TableCell
+                                          colSpan={3}
+                                          className="px-4 py-2 text-sm font-semibold text-gray-600"
+                                        >
+                                          {subgroup}
+                                        </TableCell>
+                                      </TableRow>
+                                    )}
+
+                                    {items.map((item) => (
+                                      <TableRow key={item.id} className="bg-white hover:bg-gray-50">
+                                        <TableCell className="text-sm font-medium text-gray-900 align-top">
+                                          <div>{item.item}</div>
+                                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                                            <span className="font-mono uppercase tracking-wide">{item.id}</span>
+                                            <Badge className={`${statusStyles[item.status]} font-normal`} variant="secondary">
+                                              {item.status}
+                                            </Badge>
+                                          </div>
+                                        </TableCell>
+                                        <TableCell className="text-sm text-gray-700 align-top">
+                                          {item.owner}
+                                        </TableCell>
+                                        <TableCell className="text-sm text-gray-600 align-top">
+                                          {item.deliverable}
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </Fragment>
+                                )
+                              })}
+                            </Fragment>
+                          )
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={3} className="py-10 text-center text-sm text-gray-500">
+                            No checklist items match the current filters.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                    <TableCaption className="text-xs text-gray-500">
+                      Update filters or search above to focus the deployment playbook on the steps that matter right now.
+                    </TableCaption>
+                  </Table>
+                </Card>
               </div>
             )}
           </main>
         </SidebarInset>
       </SidebarProvider>
+
+      {/* Video Player Modal */}
+      <VideoPlayerModal
+        video={selectedVideo}
+        isOpen={isVideoPlayerOpen}
+        onClose={handleCloseVideo}
+      />
     </div>
   )
 }
-
-
