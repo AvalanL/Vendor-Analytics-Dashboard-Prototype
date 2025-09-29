@@ -64,7 +64,7 @@ const trainingVideos: TrainingVideo[] = [
     category: 'Demo Execution',
     difficulty: 'Beginner',
     thumbnail: '/api/placeholder/320/180',
-    videoUrl: '/videos/PTS demo - client side.mov',
+    videoUrl: '/videos/PTS demo - client side.mp4',
     completed: false
   },
   {
@@ -75,7 +75,7 @@ const trainingVideos: TrainingVideo[] = [
     category: 'Demo Execution',
     difficulty: 'Beginner',
     thumbnail: '/api/placeholder/320/180',
-    videoUrl: '/videos/PTS demo - Vendor side.mov',
+    videoUrl: '/videos/PTS demo - Vendor side.mp4',
     completed: false
   },
   {

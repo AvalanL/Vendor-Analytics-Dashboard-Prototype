@@ -322,7 +322,7 @@ function VendorDemoFAQ() {
 }
 
 export default function VendorDemoTrainingPage() {
-  const videoUrl = '/videos/PTS demo - Vendor side.mov'
+  const videoUrl = '/videos/PTS demo - Vendor side.mp4'
 
   return (
     <div className="min-h-screen bg-gray-50">
