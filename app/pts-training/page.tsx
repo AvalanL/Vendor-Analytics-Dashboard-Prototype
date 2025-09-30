@@ -86,7 +86,7 @@ const trainingVideos: TrainingVideo[] = [
     category: 'Implementation',
     difficulty: 'Advanced',
     thumbnail: '/api/placeholder/320/180',
-    videoUrl: '/videos/PTS Internal Training with Deployment.mp4',
+    videoUrl: '/videos/PTS Deployment Demo Recording.mp4',
     completed: false
   }
 ]
