@@ -387,37 +387,13 @@ function VideoThumbnail({ videoUrl, className }: {
     }
   }, [videoUrl])
 
-  if (loading) {
-    return (
-      <div className={`bg-gray-200 flex items-center justify-center ${className}`}>
-        <Video className="w-12 h-12 text-gray-400 animate-pulse" />
-      </div>
-    )
-  }
-
+  // Temporarily show a simple placeholder instead of generating thumbnails
   return (
-    <div className={`bg-gray-200 overflow-hidden ${className}`}>
-      {thumbnail ? (
-        <img
-          src={thumbnail}
-          alt="Video thumbnail"
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center">
-          <Video className="w-12 h-12 text-gray-400" />
-        </div>
-      )}
-      <video
-        ref={videoRef}
-        className="hidden"
-        preload="metadata"
-        muted
-        playsInline
-      >
-        <source src={videoUrl} type="video/quicktime" />
-        <source src={videoUrl} type="video/mp4" />
-      </video>
+    <div className={`bg-gray-900 flex items-center justify-center ${className}`}>
+      <div className="text-center">
+        <Video className="w-16 h-16 text-white mx-auto mb-2" />
+        <p className="text-white text-sm">Video Ready</p>
+      </div>
     </div>
   )
 }
