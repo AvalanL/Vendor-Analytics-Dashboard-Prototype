@@ -252,7 +252,7 @@ export default function DeploymentDemoPage() {
                 <video
                   controls
                   className="w-full h-full rounded-lg"
-                  poster="/api/placeholder/800/450"
+                  poster=""
                 >
                   <source src="/videos/PTS Deployment Demo Recording.mp4" type="video/mp4" />
                   Your browser does not support the video tag.

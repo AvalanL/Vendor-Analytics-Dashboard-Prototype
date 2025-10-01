@@ -63,7 +63,7 @@ const trainingVideos: TrainingVideo[] = [
     duration: 'TBD',
     category: 'Demo Execution',
     difficulty: 'Beginner',
-    thumbnail: '/api/placeholder/320/180',
+    thumbnail: '',
     videoUrl: '/videos/PTS demo - client side.mp4',
     completed: false
   },
@@ -74,7 +74,7 @@ const trainingVideos: TrainingVideo[] = [
     duration: 'TBD',
     category: 'Demo Execution',
     difficulty: 'Beginner',
-    thumbnail: '/api/placeholder/320/180',
+    thumbnail: '',
     videoUrl: '/videos/PTS demo - Vendor side.mp4',
     completed: false
   },
@@ -85,7 +85,7 @@ const trainingVideos: TrainingVideo[] = [
     duration: 'TBD',
     category: 'Implementation',
     difficulty: 'Advanced',
-    thumbnail: '/api/placeholder/320/180',
+    thumbnail: '',
     videoUrl: '/videos/PTS Deployment Demo Recording.mp4',
     completed: false
   }
