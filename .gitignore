@@ -34,3 +34,8 @@ next-env.d.ts
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Videos (too large for git)
+public/videos/*.mp4
+public/videos/*.mov
+public/videos/*.m4a
