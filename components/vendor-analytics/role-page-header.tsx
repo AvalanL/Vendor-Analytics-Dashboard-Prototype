@@ -1,5 +1,3 @@
-import { Button } from "@/components/ui/button"
-import { Download, BarChart3 } from "lucide-react"
 import Link from "next/link"
 
 export function RolePageHeader() {
@@ -41,11 +39,6 @@ export function RolePageHeader() {
     lineHeight: "143%",
   }
 
-  // Export button style
-  const exportButtonStyle = {
-    color: "#1A1C1C",
-    fontFamily: '"Work Sans", sans-serif',
-  }
 
   return (
     <div className="mb-6">
@@ -60,21 +53,9 @@ export function RolePageHeader() {
         <span style={breadcrumbTextStyle}>Role Manager</span>
       </div>
 
-      {/* Title and Action buttons - with updated page title typography */}
+      {/* Title - with updated page title typography */}
       <div className="flex items-center justify-between mb-6">
         <h1 style={pageTitleStyle}>Role Manager</h1>
-        <div className="flex items-center gap-3">
-          <Link href="/role-insights">
-            <Button className="flex items-center gap-2 bg-[#5751F9] hover:bg-[#4A45E8] text-white">
-              <BarChart3 className="h-4 w-4" />
-              Role Analytics
-            </Button>
-          </Link>
-          <Button variant="outline" className="flex items-center gap-2 text-gray-900" style={exportButtonStyle}>
-            <Download className="h-4 w-4" />
-            Export
-          </Button>
-        </div>
       </div>
     </div>
   )

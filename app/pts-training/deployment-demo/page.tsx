@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -189,6 +189,14 @@ const deploymentDemoFAQ = [
 ]
 
 export default function DeploymentDemoPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-16 text-gray-500">Loading deployment training…</div>}>
+      <DeploymentDemoContent />
+    </Suspense>
+  )
+}
+
+function DeploymentDemoContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [selectedVideoPart, setSelectedVideoPart] = useState<DeploymentVideoPart>('part1')

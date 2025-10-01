@@ -1,9 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Search, ChevronDown } from "lucide-react"
-
-type TimeRange = "7 days" | "30 days" | "90 days" | "1 year"
 
 interface RoleFiltersProps {
   selectedPeriod: string
@@ -31,20 +28,6 @@ export function RoleFilters({
   onSearchChange,
 }: RoleFiltersProps) {
   // Set default to "30 days" regardless of what comes in from props
-  const [activeTab, setActiveTab] = useState<TimeRange>("30 days")
-
-  // Sync with parent component on mount
-  useEffect(() => {
-    // Set the default to "30 days" and notify parent
-    if (selectedPeriod !== "30days") {
-      onPeriodChange("30days")
-    }
-  }, [])
-
-  const handleTabChange = (tab: TimeRange) => {
-    setActiveTab(tab)
-    onPeriodChange(tab.replace(" ", "").toLowerCase())
-  }
 
   // Level options for roles
   const levelOptions = [
@@ -83,7 +66,7 @@ export function RoleFilters({
         </div>
         <input
           type="text"
-          placeholder="Search by vendor name or performance insights"
+          placeholder="Search by role name"
           className="w-full h-[48px] py-3 pl-10 pr-4 bg-white border border-[#d1d1d1] rounded-lg text-[#5c5e5e] placeholder-[#888] focus:outline-none text-base leading-[144%]"
           style={{ fontFamily: '"Work Sans", sans-serif', fontWeight: 400 }}
           value={searchQuery}
@@ -92,23 +75,6 @@ export function RoleFilters({
       </div>
 
       <div className="flex flex-col md:flex-row flex-wrap gap-4">
-        {/* Time period tabs */}
-        <div className="inline-flex h-[48px] p-[2px] justify-end items-center gap-[4px] flex-shrink-0 rounded-[8px] border border-[#D1D1D1] bg-white w-full md:w-auto">
-          {(["7 days", "30 days", "90 days", "1 year"] as TimeRange[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => handleTabChange(tab)}
-              className={`flex h-[44px] px-[16px] justify-center items-center gap-[8px] transition-colors text-center text-base leading-[144%] flex-shrink-0 ${
-                activeTab === tab
-                  ? "bg-[#5751f9] text-white rounded-[8px] shadow-[0px_2px_3px_0px_rgba(0,0,0,0.20)] my-[2px]"
-                  : "text-[#5c5e5e] hover:bg-[#f8f8f8]"
-              }`}
-              style={{ fontFamily: '"Work Sans", sans-serif', fontWeight: 600 }}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full md:flex-1">
           {/* Level dropdown */}
