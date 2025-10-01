@@ -64,7 +64,7 @@ const trainingVideos: TrainingVideo[] = [
     category: 'Demo Execution',
     difficulty: 'Beginner',
     thumbnail: '',
-    videoUrl: '/videos/PTS demo - client side.mp4',
+    videoUrl: '/videos/PTS-demo-client-side.mp4',
     completed: false
   },
   {
@@ -75,7 +75,7 @@ const trainingVideos: TrainingVideo[] = [
     category: 'Demo Execution',
     difficulty: 'Beginner',
     thumbnail: '',
-    videoUrl: '/videos/PTS demo - Vendor side.mp4',
+    videoUrl: '/videos/PTS-demo-vendor-side.mp4',
     completed: false
   },
   {
@@ -86,7 +86,7 @@ const trainingVideos: TrainingVideo[] = [
     category: 'Implementation',
     difficulty: 'Advanced',
     thumbnail: '',
-    videoUrl: '/videos/PTS Deployment Demo Training Part1.mp4',
+    videoUrl: '/videos/PTS-Deployment-Demo-Training-Part1.mp4',
     completed: false
   },
   {
@@ -97,7 +97,7 @@ const trainingVideos: TrainingVideo[] = [
     category: 'Implementation',
     difficulty: 'Advanced',
     thumbnail: '',
-    videoUrl: '/videos/PTS Deployment Demo Training Part2.mp4',
+    videoUrl: '/videos/PTS-Deployment-Demo-Training-Part2.mp4',
     completed: false
   }
 ]

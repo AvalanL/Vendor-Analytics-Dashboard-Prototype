@@ -50,12 +50,12 @@ const deploymentVideoParts: { id: DeploymentVideoPart; label: string; src: strin
   {
     id: 'part1',
     label: 'Part 1',
-    src: '/videos/PTS Deployment Demo Training Part1.mp4'
+    src: '/videos/PTS-Deployment-Demo-Training-Part1.mp4'
   },
   {
     id: 'part2',
     label: 'Part 2',
-    src: '/videos/PTS Deployment Demo Training Part2.mp4'
+    src: '/videos/PTS-Deployment-Demo-Training-Part2.mp4'
   }
 ]
 

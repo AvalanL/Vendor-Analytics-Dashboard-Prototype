@@ -319,7 +319,7 @@ function DemoFAQ() {
 }
 
 export default function ClientDemoTrainingPage() {
-  const videoUrl = '/videos/PTS demo - client side.mp4'
+  const videoUrl = '/videos/PTS-demo-client-side.mp4'
 
   return (
     <div className="min-h-screen bg-gray-50">
