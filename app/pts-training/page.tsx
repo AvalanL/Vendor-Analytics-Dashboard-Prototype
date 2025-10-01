@@ -79,14 +79,25 @@ const trainingVideos: TrainingVideo[] = [
     completed: false
   },
   {
-    id: 'pts-deployment-training',
-    title: 'PTS Deployment Team Training',
+    id: 'pts-deployment-training-part1',
+    title: 'PTS Deployment Team Training (Part 1)',
     description: 'Implementation team knowledge transfer covering PTS setup, client demos, vendor management, and ongoing support',
     duration: 'TBD',
     category: 'Implementation',
     difficulty: 'Advanced',
     thumbnail: '',
-    videoUrl: '/videos/PTS Deployment Demo Recording.mp4',
+    videoUrl: '/videos/PTS Deployment Demo Training Part1.mp4',
+    completed: false
+  },
+  {
+    id: 'pts-deployment-training-part2',
+    title: 'PTS Deployment Team Training (Part 2)',
+    description: 'Continuation of the deployment enablement session with deeper dives into implementation responsibilities',
+    duration: 'TBD',
+    category: 'Implementation',
+    difficulty: 'Advanced',
+    thumbnail: '',
+    videoUrl: '/videos/PTS Deployment Demo Training Part2.mp4',
     completed: false
   }
 ]
@@ -829,7 +840,7 @@ function VideoCard({ video, onPlay }: {
 
   const isClientDemo = video.id === 'pts-demo-client-side'
   const isVendorDemo = video.id === 'pts-demo-vendor-side'
-  const isDeploymentTraining = video.id === 'pts-deployment-training'
+  const isDeploymentTraining = video.id === 'pts-deployment-training-part1' || video.id === 'pts-deployment-training-part2'
 
   if (isClientDemo) {
     return (
@@ -942,8 +953,11 @@ function VideoCard({ video, onPlay }: {
   }
 
   if (isDeploymentTraining) {
+    const isPartTwo = video.id === 'pts-deployment-training-part2'
+    const deploymentHref = isPartTwo ? '/pts-training/deployment-demo?part=part2' : '/pts-training/deployment-demo'
+
     return (
-      <Link href="/pts-training/deployment-demo">
+      <Link href={deploymentHref}>
         <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer">
           <div className="relative">
             <div className="w-full h-48 relative group">
@@ -964,16 +978,20 @@ function VideoCard({ video, onPlay }: {
             <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm">
               Full Training
             </div>
-            <div className="absolute top-2 left-2">
+            <div className="absolute top-2 left-2 space-y-1">
+              {video.completed && (
+                <div className="flex items-center gap-1 bg-white/90 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                  <CheckCircle className="w-3 h-3" />
+                  Completed
+                </div>
+              )}
               <Badge className="bg-orange-100 text-orange-800" variant="secondary">
                 Implementation Guide
               </Badge>
+              <Badge className="bg-white/90 text-gray-900" variant="secondary">
+                {isPartTwo ? 'Part 2' : 'Part 1'}
+              </Badge>
             </div>
-            {video.completed && (
-              <div className="absolute top-2 left-2">
-                <CheckCircle className="w-5 h-5 text-green-500" />
-              </div>
-            )}
           </div>
 
           <div className="p-4">
@@ -983,7 +1001,7 @@ function VideoCard({ video, onPlay }: {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <FileText className="w-3 h-3" />
-                <span>Video + Guide + FAQ</span>
+                <span>Video + Guide + FAQ ({isPartTwo ? 'Part 2' : 'Part 1'})</span>
               </div>
               <Button size="sm" className="flex items-center gap-1">
                 <ExternalLink className="w-3 h-3" />

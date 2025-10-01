@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Play, Users, HelpCircle, Settings, FileText, Clock, Calendar, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 const deploymentDemoSummary = {
   title: "PTS Deployment Team Training Guide",
@@ -42,6 +43,21 @@ const deploymentDemoSummary = {
     }
   ]
 }
+
+type DeploymentVideoPart = 'part1' | 'part2'
+
+const deploymentVideoParts: { id: DeploymentVideoPart; label: string; src: string }[] = [
+  {
+    id: 'part1',
+    label: 'Part 1',
+    src: '/videos/PTS Deployment Demo Training Part1.mp4'
+  },
+  {
+    id: 'part2',
+    label: 'Part 2',
+    src: '/videos/PTS Deployment Demo Training Part2.mp4'
+  }
+]
 
 const deploymentDemoFAQ = [
   {
@@ -173,7 +189,32 @@ const deploymentDemoFAQ = [
 ]
 
 export default function DeploymentDemoPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [selectedVideoPart, setSelectedVideoPart] = useState<DeploymentVideoPart>('part1')
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
+  const activeVideoPart = deploymentVideoParts.find((part) => part.id === selectedVideoPart) ?? deploymentVideoParts[0]
+
+  useEffect(() => {
+    const partParam = searchParams.get('part')
+    const nextPart: DeploymentVideoPart = partParam === 'part2' ? 'part2' : 'part1'
+    setSelectedVideoPart((prev) => (prev === nextPart ? prev : nextPart))
+  }, [searchParams])
+
+  const handleVideoPartChange = (value: string) => {
+    const part = value === 'part2' ? 'part2' : 'part1'
+    setSelectedVideoPart(part)
+
+    const params = new URLSearchParams(searchParams.toString())
+    if (part === 'part1') {
+      params.delete('part')
+    } else {
+      params.set('part', part)
+    }
+
+    const queryString = params.toString()
+    router.replace(`/pts-training/deployment-demo${queryString ? `?${queryString}` : ''}`, { scroll: false })
+  }
 
   const toggleExpanded = (id: string) => {
     const newExpanded = new Set(expandedItems)
@@ -247,17 +288,39 @@ export default function DeploymentDemoPage() {
           </TabsList>
 
           <TabsContent value="video">
-            <Card className="p-6">
-              <div className="aspect-video bg-black rounded-lg flex items-center justify-center mb-6">
-                <video
-                  controls
-                  className="w-full h-full rounded-lg"
-                  poster=""
-                >
-                  <source src="/videos/PTS Deployment Demo Recording.mp4" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              </div>
+            <Card className="p-6 space-y-6">
+              <Tabs
+                value={selectedVideoPart}
+                onValueChange={handleVideoPartChange}
+                className="space-y-4"
+              >
+                <TabsList className="grid w-full max-w-xs grid-cols-2 mx-auto">
+                  {deploymentVideoParts.map((part) => (
+                    <TabsTrigger key={part.id} value={part.id} className="flex items-center gap-2">
+                      <Play className="w-4 h-4" />
+                      {part.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+
+                {deploymentVideoParts.map((part) => (
+                  <TabsContent key={part.id} value={part.id} className="mt-0">
+                    <div className="aspect-video bg-black rounded-lg flex items-center justify-center">
+                      <video
+                        key={part.id}
+                        controls
+                        className="w-full h-full rounded-lg"
+                        poster=""
+                      >
+                        <source src={part.src} type="video/quicktime" />
+                        <source src={part.src} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                  </TabsContent>
+                ))}
+              </Tabs>
+
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold">PTS Deployment Team Training</h2>
@@ -271,6 +334,9 @@ export default function DeploymentDemoPage() {
                       Implementation Team
                     </div>
                   </div>
+                </div>
+                <div className="text-sm text-gray-500">
+                  Currently viewing {activeVideoPart.label}
                 </div>
                 <p className="text-gray-700">
                   Comprehensive knowledge transfer session covering PTS setup, client demos, vendor management,
